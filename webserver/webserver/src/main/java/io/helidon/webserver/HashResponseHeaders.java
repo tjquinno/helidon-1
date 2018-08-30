@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.helidon.common.OptionalHelper;
+import io.helidon.common.rest.Http;
 import io.helidon.webserver.spi.BareResponse;
 
 /**

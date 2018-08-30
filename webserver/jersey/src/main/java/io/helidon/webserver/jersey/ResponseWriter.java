@@ -32,9 +32,9 @@ import javax.ws.rs.core.MediaType;
 
 import io.helidon.common.reactive.OutputStreamPublisher;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ConnectionClosedException;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.ResponseChunk;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 

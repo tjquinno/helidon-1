@@ -18,12 +18,14 @@ package io.helidon.webserver;
 
 import org.junit.jupiter.api.Test;
 
-import static io.helidon.webserver.Http.Method.DELETE;
-import static io.helidon.webserver.Http.Method.GET;
-import static io.helidon.webserver.Http.Method.POST;
-import static io.helidon.webserver.Http.Method.PUT;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static io.helidon.common.rest.Http.Method.DELETE;
+import static io.helidon.common.rest.Http.Method.GET;
+import static io.helidon.common.rest.Http.Method.POST;
+import static io.helidon.common.rest.Http.Method.PUT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests {@link RouteListRoutingRules}.

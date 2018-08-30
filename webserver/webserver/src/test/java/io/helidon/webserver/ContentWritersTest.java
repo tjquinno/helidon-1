@@ -16,18 +16,18 @@
 
 package io.helidon.webserver;
 
-
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.utils.CollectingSubscriber;
 
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A test for {@link ContentWriters}

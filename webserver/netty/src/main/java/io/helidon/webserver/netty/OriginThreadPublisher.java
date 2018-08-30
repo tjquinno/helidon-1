@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import io.helidon.common.reactive.Flow;
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.RequestChunk;
 
 import io.netty.buffer.ByteBuf;
 

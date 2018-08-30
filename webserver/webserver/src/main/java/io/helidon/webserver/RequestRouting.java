@@ -28,6 +28,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import io.helidon.common.CollectionsHelper;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.HttpException;
 import io.helidon.webserver.spi.BareRequest;
 import io.helidon.webserver.spi.BareResponse;
 

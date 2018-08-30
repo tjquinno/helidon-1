@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 import io.helidon.common.reactive.Flow;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.ResponseChunk;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.SocketClosedException;
 import io.helidon.webserver.WebServer;

@@ -35,5 +35,6 @@
         <module>reactive</module>
         <module>configurable</module>
         <module>key-util</module>
+        <module>rest</module>
     </modules>
 </project>

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.helidon.common.reactive.Flow;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.RequestChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
 

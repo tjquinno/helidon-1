@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>helidon-rest-client-project</artifactId>
+        <groupId>io.helidon</groupId>
+        <version>0.0.3-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>helidon-rest-client</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.helidon.common</groupId>
+            <artifactId>helidon-common-rest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.config</groupId>
+            <artifactId>helidon-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- only to demonstrate - this must be a separate integration module of security -->
+        <dependency>
+            <groupId>io.helidon.security</groupId>
+            <artifactId>helidon-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

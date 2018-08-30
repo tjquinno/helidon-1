@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.RequestChunk;
 
 import io.netty.buffer.ByteBuf;
 

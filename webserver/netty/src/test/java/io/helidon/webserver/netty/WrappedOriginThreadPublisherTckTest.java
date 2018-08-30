@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.RequestChunk;
 
 import io.netty.buffer.Unpooled;
 import org.reactivestreams.Publisher;

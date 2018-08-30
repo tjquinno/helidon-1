@@ -22,6 +22,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 
 /**
  * Represents HTTP Response.

@@ -25,7 +25,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.RequestChunk;
 
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsInstanceOf;
@@ -33,7 +33,8 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * The JsonContentReaderTest.

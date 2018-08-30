@@ -23,8 +23,8 @@ import java.util.Optional;
 
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
+import io.helidon.common.rest.RequestChunk;
 import io.helidon.webserver.MediaType;
-import io.helidon.webserver.RequestChunk;
 
 import reactor.core.publisher.Flux;
 

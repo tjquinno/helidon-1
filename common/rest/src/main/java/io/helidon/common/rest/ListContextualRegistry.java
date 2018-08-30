@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.webserver;
+package io.helidon.common.rest;
 
 import java.util.ArrayList;
 import java.util.List;

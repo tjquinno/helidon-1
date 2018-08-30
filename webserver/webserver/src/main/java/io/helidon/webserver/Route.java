@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import io.helidon.common.rest.Http;
+
 /**
  * A unit of the {@link Routing}.
  */

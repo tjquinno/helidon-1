@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.webserver;
+package io.helidon.common.rest;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 /**
  * A registry for context objects. Enables instance localization between several <i>services / components / ...</i> integrated in
  * a particular known scope. ContextualRegistry instance is intended to be associated with a scope aware object such as
- * {@link WebServer} or {@link ServerRequest}.
+ * WebServer, ServerRequest or ClientRequest.
  *
  * <p>Context contains also a notion of <i>classifiers</i>. Classifier is any object defining additional <i>key</i> for registered
  * objects. To obtain such registered object, the same classifier (precisely, any equal object) has to be used.

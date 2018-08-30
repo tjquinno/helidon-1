@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
-import io.helidon.webserver.Http;
+import io.helidon.common.rest.Http;
 
 /**
  * An API to compose a test request.

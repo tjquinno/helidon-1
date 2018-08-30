@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.Reader;
+import io.helidon.common.rest.RequestChunk;
 
 /**
  * The ContentReaders.
@@ -103,7 +105,7 @@ public final class ContentReaders {
      * {@link IllegalArgumentException} if it wasn't possible to convert the byte buffer
      * to an array of bytes
      */
-    public static ServerRequest.Reader<byte[]> byteArrayReader() {
+    public static Reader<byte[]> byteArrayReader() {
         return (publisher, clazz) -> {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             CompletableFuture<byte[]> future = new CompletableFuture<>();
@@ -149,7 +151,7 @@ public final class ContentReaders {
      *
      * @return a input stream content reader
      */
-    public static ServerRequest.Reader<InputStream> inputStreamReader() {
+    public static Reader<InputStream> inputStreamReader() {
         return (publisher, clazz) -> {
             CompletableFuture future = new CompletableFuture<InputStream>();
             future.complete(new PublisherInputStream(publisher));

@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import io.helidon.common.rest.Http;
+
 /**
  * Serves 'static content' (files) from filesystem or using a classloader to the {@link WebServer WebServer}
  * {@link Routing}. It is possible to {@link Routing.Builder#register(Service...) register} it on the routing.

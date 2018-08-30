@@ -29,9 +29,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ConnectionClosedException;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.ResponseChunk;
 import io.helidon.webserver.SocketClosedException;
 import io.helidon.webserver.spi.BareResponse;
 

@@ -77,6 +77,10 @@ public final class RegistryFactory {
         return () -> staticInstance;
     }
 
+    public static RegistryFactory createSeFactory(Config config) {
+        return create(config);
+    }
+
     Registry getARegistry(Type type) {
         return registries.get(type);
     }

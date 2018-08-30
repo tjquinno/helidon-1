@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.webserver.ResponseChunk;
+import io.helidon.common.rest.ResponseChunk;
 
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;

@@ -17,7 +17,7 @@
 package io.helidon.webserver.netty;
 
 import io.helidon.common.reactive.Flow;
-import io.helidon.webserver.RequestChunk;
+import io.helidon.common.rest.RequestChunk;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;

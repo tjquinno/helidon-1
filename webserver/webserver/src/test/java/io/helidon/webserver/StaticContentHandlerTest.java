@@ -25,11 +25,13 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.common.CollectionsHelper;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.HttpException;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;

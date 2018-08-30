@@ -16,6 +16,9 @@
 
 package io.helidon.webserver;
 
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.HttpException;
+
 /**
  * A runtime exception indicating a {@link Http.Status#BAD_REQUEST_400 bad request}.
  */

@@ -34,8 +34,8 @@ import javax.ws.rs.core.Response;
 
 import io.helidon.common.InputStreamHelper;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.ResponseChunk;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.testsupport.LoggingTestUtils;
@@ -48,12 +48,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * The ResponseOrderingTest tests whether http chunks were sent in a correct order which was reported as MIC-6419.

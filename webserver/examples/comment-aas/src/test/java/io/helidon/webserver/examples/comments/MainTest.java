@@ -19,7 +19,7 @@ package io.helidon.webserver.examples.comments;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.helidon.webserver.Http;
+import io.helidon.common.rest.Http;
 import io.helidon.webserver.MediaType;
 import io.helidon.webserver.testsupport.MediaPublisher;
 import io.helidon.webserver.testsupport.TestClient;
@@ -27,7 +27,8 @@ import io.helidon.webserver.testsupport.TestResponse;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests {@link Main} class.

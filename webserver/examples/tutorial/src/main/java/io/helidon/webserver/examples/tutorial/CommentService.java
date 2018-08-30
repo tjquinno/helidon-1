@@ -24,9 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ContentWriters;
 import io.helidon.webserver.MediaType;
-import io.helidon.webserver.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;

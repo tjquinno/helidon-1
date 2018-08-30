@@ -30,6 +30,7 @@ import java.util.function.Function;
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
 import io.helidon.common.reactive.RetrySchema;
+import io.helidon.common.rest.ResponseChunk;
 
 import reactor.core.publisher.Mono;
 

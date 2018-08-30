@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
+import io.helidon.common.rest.ContextualRegistry;
 import io.helidon.webserver.spi.WebServerFactory;
 
 /**

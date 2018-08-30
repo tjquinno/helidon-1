@@ -32,6 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.HttpException;
+
 /**
  * Handles static content from the classpath.
  */

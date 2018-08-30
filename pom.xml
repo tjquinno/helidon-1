@@ -188,6 +188,7 @@
         <module>javadocs</module>
         <!--<module>docs</module>-->
         <module>microprofile</module>
+        <module>rest-client</module>
     </modules>
 
     <build>

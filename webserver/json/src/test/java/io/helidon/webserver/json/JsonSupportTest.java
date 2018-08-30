@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonObject;
 
+import io.helidon.common.rest.Http;
 import io.helidon.webserver.Handler;
-import io.helidon.webserver.Http;
 import io.helidon.webserver.MediaType;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.testsupport.MediaPublisher;
@@ -32,7 +32,7 @@ import io.helidon.webserver.testsupport.TestResponse;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests {@link JsonSupport}.

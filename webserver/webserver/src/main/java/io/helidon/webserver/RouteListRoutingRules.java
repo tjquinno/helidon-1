@@ -24,6 +24,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import io.helidon.common.rest.Http;
+
 /**
  * A {@link Routing.Rules} implementation collecting all routings into single {@link RouteList}.
  */

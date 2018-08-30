@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
+import io.helidon.common.rest.Http;
+
 /**
  * Extends {@link Parameters} interface by adding HTTP request headers oriented convenient methods.
  * Use constants located in {@link Http.Header} as standard header names.

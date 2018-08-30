@@ -25,6 +25,8 @@ import java.util.concurrent.CompletionStage;
 
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.spi.BareResponse;
 
 import io.opentracing.SpanContext;
@@ -34,7 +36,9 @@ import reactor.core.publisher.Mono;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests {@link Response}.

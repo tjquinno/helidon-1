@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.HttpException;
+
 /**
  * Provides mapping between filename extension and media type.
  */

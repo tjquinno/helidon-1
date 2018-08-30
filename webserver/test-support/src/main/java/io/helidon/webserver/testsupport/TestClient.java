@@ -32,12 +32,12 @@ import java.util.concurrent.TimeoutException;
 
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.RequestChunk;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Builder;
 import io.helidon.webserver.Handler;
-import io.helidon.webserver.Http;
 import io.helidon.webserver.ReadOnlyParameters;
-import io.helidon.webserver.RequestChunk;
-import io.helidon.webserver.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.spi.BareRequest;
 import io.helidon.webserver.spi.BareResponse;

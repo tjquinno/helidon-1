@@ -28,6 +28,8 @@ import java.util.OptionalLong;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
+import io.helidon.common.rest.Http;
+
 /**
  * Extends {@link Parameters} interface by adding HTTP response headers oriented constants and convenient methods.
  * Use constants located in {@link Http.Header} as standard header names.

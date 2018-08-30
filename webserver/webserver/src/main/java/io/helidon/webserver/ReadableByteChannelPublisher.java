@@ -31,6 +31,7 @@ import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.RequestedCounter;
 import io.helidon.common.reactive.RetrySchema;
 import io.helidon.common.reactive.SingleSubscriberHolder;
+import io.helidon.common.rest.ResponseChunk;
 
 /**
  * Publish a channel content to a single {@link Flow.Subscriber subscriber}. If channel doesn't offer data, then it is requested

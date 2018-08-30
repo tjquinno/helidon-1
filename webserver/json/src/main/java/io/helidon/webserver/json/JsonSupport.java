@@ -33,13 +33,15 @@ import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.Content;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.Reader;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ContentReaders;
 import io.helidon.webserver.ContentWriters;
 import io.helidon.webserver.Handler;
-import io.helidon.webserver.Http;
 import io.helidon.webserver.MediaType;
 import io.helidon.webserver.Parameters;
-import io.helidon.webserver.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
@@ -53,7 +55,7 @@ import io.helidon.webserver.WebServer;
  * as {@link javax.json.JsonObject JsonObject} or {@link javax.json.JsonArray JsonArray}. If registered on the
  * {@code Web Server} {@link Routing}, then all {@link Handler Handlers} can use
  * {@code ServerRequest.}{@link ServerRequest#content() content()}{@code .}
- * {@link ServerRequest.Content#as(java.lang.Class) as(...)} and
+ * {@link Content#as(java.lang.Class) as(...)} and
  * {@code ServerResponse.}{@link ServerResponse#send(Object) send()}
  * with {@link JsonStructure JSON} objects.
  *
@@ -234,7 +236,7 @@ public final class JsonSupport implements Service, Handler {
      *         might end exceptionally with a {@link IllegalArgumentException} in case of I/O error or
      *         a {@link javax.json.JsonException}
      */
-    public ServerRequest.Reader<JsonStructure> reader(Charset charset) {
+    public Reader<JsonStructure> reader(Charset charset) {
         return (publisher, clazz) ->
                 ContentReaders.byteArrayReader()
                               .apply(publisher)
@@ -259,7 +261,7 @@ public final class JsonSupport implements Service, Handler {
      *         might end exceptionally with a {@link IllegalArgumentException} in case of I/O error or
      *         a {@link javax.json.JsonException}
      */
-    public ServerRequest.Reader<JsonStructure> reader() {
+    public Reader<JsonStructure> reader() {
         return reader(null);
     }
 

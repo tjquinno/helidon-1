@@ -25,18 +25,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
+import io.helidon.common.rest.Http;
 import io.helidon.webserver.spi.BareResponse;
 
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.jupiter.api.Test;
 
 import static io.helidon.webserver.utils.TestUtils.assertException;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;

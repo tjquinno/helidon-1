@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
 import io.helidon.common.reactive.SubmissionPublisher;
-import io.helidon.webserver.Http;
-import io.helidon.webserver.RequestChunk;
-import io.helidon.webserver.ResponseChunk;
+import io.helidon.common.rest.Http;
+import io.helidon.common.rest.RequestChunk;
+import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.SocketConfiguration;
@@ -48,13 +48,14 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 /**
  * The NettyWebServerTest.
  */
