@@ -39,8 +39,10 @@ import io.helidon.common.CollectionsHelper;
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.rest.ContextualRegistry;
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.Parameters;
 import io.helidon.common.rest.Reader;
 import io.helidon.common.rest.RequestChunk;
+import io.helidon.common.rest.RequestHeaders;
 import io.helidon.webserver.spi.BareRequest;
 
 import io.opentracing.Span;

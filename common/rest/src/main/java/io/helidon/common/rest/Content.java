@@ -113,7 +113,7 @@ public interface Content extends Flow.Publisher<RequestChunk> {
      *                  {@link #as(Class)} method call ends exceptionally.
      * @param <T>       the requested type
      */
-    <T> void registerReader(Predicate<Class<?>> predicate, ServerRequest.Reader<T> reader);
+    <T> void registerReader(Predicate<Class<?>> predicate, Reader<T> reader);
 
     /**
      * Consumes and converts the request content into a completion stage of the requested type.

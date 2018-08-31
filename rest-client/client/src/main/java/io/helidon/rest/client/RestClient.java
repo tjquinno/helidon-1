@@ -37,6 +37,7 @@ public interface RestClient {
 
     RequestBuilder get(String url);
 
+    RequestBuilder request(String url);
 
 
     final class Builder implements io.helidon.common.Builder<RestClient> {

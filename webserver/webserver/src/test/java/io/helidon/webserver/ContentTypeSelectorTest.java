@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.helidon.common.rest.HttpException;
+import io.helidon.common.rest.MediaType;
+import io.helidon.common.rest.RequestHeaders;
 
 import org.junit.jupiter.api.Test;
 

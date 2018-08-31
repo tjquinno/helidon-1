@@ -1,20 +1,21 @@
 /*
- * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 
-package io.helidon.webserver;
+package io.helidon.common.rest;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -187,13 +188,13 @@ public class MediaType implements AcceptPredicate<MediaType> {
      * Consider using the constant {@link #WILDCARD_VALUE} instead.
      */
     public MediaType() {
-        this(WILDCARD_VALUE, WILDCARD_VALUE, null, null);
+        this(AcceptPredicate.WILDCARD_VALUE, AcceptPredicate.WILDCARD_VALUE, null, null);
     }
 
     private MediaType(String type, String subtype, String charset, Map<String, String> parameterMap) {
 
-        this.type = type == null ? WILDCARD_VALUE : type;
-        this.subtype = subtype == null ? WILDCARD_VALUE : subtype;
+        this.type = type == null ? AcceptPredicate.WILDCARD_VALUE : type;
+        this.subtype = subtype == null ? AcceptPredicate.WILDCARD_VALUE : subtype;
 
         if (parameterMap == null) {
             parameterMap = new TreeMap<>(String::compareToIgnoreCase);
@@ -220,7 +221,7 @@ public class MediaType implements AcceptPredicate<MediaType> {
      * @return true if the primary type is a wildcard.
      */
     public boolean isWildcardType() {
-        return this.getType().equals(WILDCARD_VALUE);
+        return this.getType().equals(AcceptPredicate.WILDCARD_VALUE);
     }
 
     /**
@@ -238,7 +239,7 @@ public class MediaType implements AcceptPredicate<MediaType> {
      * @return true if the subtype is a wildcard.
      */
     public boolean isWildcardSubtype() {
-        return this.getSubtype().equals(WILDCARD_VALUE);
+        return this.getSubtype().equals(AcceptPredicate.WILDCARD_VALUE);
     }
 
     /**
@@ -275,7 +276,7 @@ public class MediaType implements AcceptPredicate<MediaType> {
 
     @Override
     public double qualityFactor() {
-        String q = parameters.get(QUALITY_FACTOR_PARAMETER);
+        String q = parameters.get(AcceptPredicate.QUALITY_FACTOR_PARAMETER);
         return q == null ? 1D : Double.valueOf(q);
     }
 
@@ -290,10 +291,13 @@ public class MediaType implements AcceptPredicate<MediaType> {
     // fixme: Bidirectional wildcard compatibility
     public boolean test(MediaType other) {
         return other != null && // return false if other is null, else
-                (type.equals(WILDCARD_VALUE)
-                         || other.type.equals(WILDCARD_VALUE)
+                (
+                        type.equals(AcceptPredicate.WILDCARD_VALUE)
+                                || other.type.equals(AcceptPredicate.WILDCARD_VALUE)
                          || (type.equalsIgnoreCase(other.type)
-                                     && (subtype.equals(WILDCARD_VALUE) || other.subtype.equals(WILDCARD_VALUE)))
+                                     && (
+                                subtype.equals(AcceptPredicate.WILDCARD_VALUE) || other.subtype
+                                        .equals(AcceptPredicate.WILDCARD_VALUE)))
                          || (type.equalsIgnoreCase(other.type) && this.subtype.equalsIgnoreCase(other.subtype)));
     }
 

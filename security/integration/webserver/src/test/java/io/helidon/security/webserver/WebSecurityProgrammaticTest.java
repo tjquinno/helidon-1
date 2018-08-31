@@ -22,11 +22,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
 import io.helidon.config.Config;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.util.TokenHandler;
-import io.helidon.webserver.MediaType;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.WebServer;

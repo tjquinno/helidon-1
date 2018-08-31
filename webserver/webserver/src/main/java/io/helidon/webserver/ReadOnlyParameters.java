@@ -25,6 +25,8 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import io.helidon.common.rest.Parameters;
+
 /**
  * An immutable implementation of {@link Parameters}.
  *

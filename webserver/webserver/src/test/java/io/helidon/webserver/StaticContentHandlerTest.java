@@ -27,6 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.helidon.common.CollectionsHelper;
 import io.helidon.common.rest.Http;
 import io.helidon.common.rest.HttpException;
+import io.helidon.common.rest.MediaType;
+import io.helidon.common.rest.RequestHeaders;
+import io.helidon.common.rest.ResponseHeaders;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

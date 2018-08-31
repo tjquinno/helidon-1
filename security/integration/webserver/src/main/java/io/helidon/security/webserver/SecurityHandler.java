@@ -42,6 +42,7 @@ import io.helidon.common.reactive.Flow;
 import io.helidon.common.rest.Http;
 import io.helidon.common.rest.RequestChunk;
 import io.helidon.common.rest.ResponseChunk;
+import io.helidon.common.rest.ResponseHeaders;
 import io.helidon.config.Config;
 import io.helidon.security.AuditEvent;
 import io.helidon.security.AuthenticationResponse;
@@ -58,7 +59,6 @@ import io.helidon.security.SecurityResponse;
 import io.helidon.security.internal.SecurityAuditEvent;
 import io.helidon.security.util.TokenHandler;
 import io.helidon.webserver.Handler;
-import io.helidon.webserver.ResponseHeaders;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 

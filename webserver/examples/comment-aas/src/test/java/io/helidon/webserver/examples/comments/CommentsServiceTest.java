@@ -19,7 +19,7 @@ package io.helidon.webserver.examples.comments;
 import java.nio.charset.StandardCharsets;
 
 import io.helidon.common.rest.Http;
-import io.helidon.webserver.MediaType;
+import io.helidon.common.rest.MediaType;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.testsupport.MediaPublisher;
 import io.helidon.webserver.testsupport.TestClient;

@@ -24,7 +24,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import io.helidon.webserver.RequestHeaders;
+import io.helidon.common.rest.RequestHeaders;
 import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.WebServer;
@@ -45,7 +45,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-
 import static org.mockito.Mockito.when;
 
 /**

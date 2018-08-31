@@ -25,11 +25,12 @@ import javax.json.Json;
 
 import io.helidon.common.rest.Http;
 import io.helidon.common.rest.HttpException;
+import io.helidon.common.rest.MediaType;
+import io.helidon.common.rest.Parameters;
 import io.helidon.common.rest.Reader;
 import io.helidon.common.rest.RequestChunk;
 import io.helidon.webserver.ContentReaders;
 import io.helidon.webserver.Handler;
-import io.helidon.webserver.MediaType;
 import io.helidon.webserver.RequestPredicate;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.StaticContentSupport;
@@ -135,7 +136,7 @@ public class Main {
      * <p>
      * {@link java.util.Optional Optional} API is heavily used to represent parameters optionality.
      * <p>
-     * WebServer {@link io.helidon.webserver.Parameters Parameters} API is used to represent fact, that <i>headers</i> and
+     * WebServer {@link Parameters Parameters} API is used to represent fact, that <i>headers</i> and
      * <i>query parameters</i> can contain multiple values.
      */
     public void parametersAndHeaders() {

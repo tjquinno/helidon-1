@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.MediaType;
 import io.helidon.common.rest.Reader;
 import io.helidon.common.rest.RequestChunk;
 

@@ -22,6 +22,8 @@ import java.util.List;
 import io.helidon.common.rest.Content;
 import io.helidon.common.rest.ContextualRegistry;
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.Parameters;
+import io.helidon.common.rest.RequestHeaders;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;

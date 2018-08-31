@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
+import io.helidon.common.rest.ResponseHeaders;
 import io.helidon.webserver.spi.BareResponse;
 
 import org.hamcrest.collection.IsIterableContainingInOrder;

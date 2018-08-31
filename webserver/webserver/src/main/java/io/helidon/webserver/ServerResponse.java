@@ -23,7 +23,9 @@ import java.util.function.Predicate;
 
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
 import io.helidon.common.rest.ResponseChunk;
+import io.helidon.common.rest.ResponseHeaders;
 
 /**
  * Represents HTTP Response.

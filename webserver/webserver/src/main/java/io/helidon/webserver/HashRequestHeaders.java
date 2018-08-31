@@ -27,6 +27,9 @@ import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
+import io.helidon.common.rest.Parameters;
+import io.helidon.common.rest.RequestHeaders;
 
 /**
  * A {@link RequestHeaders} implementation on top of {@link ReadOnlyParameters}.

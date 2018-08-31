@@ -16,6 +16,8 @@
 
 package io.helidon.webserver;
 
+import io.helidon.common.rest.ResponseHeaders;
+
 /**
  * Signals that a method has been invoked on already completed {@link ServerResponse} or {@link ResponseHeaders}.
  * It is no longer possible to mute state of these objects.

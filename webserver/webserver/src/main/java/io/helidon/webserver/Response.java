@@ -38,7 +38,9 @@ import io.helidon.common.OptionalHelper;
 import io.helidon.common.reactive.Flow;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
 import io.helidon.common.rest.ResponseChunk;
+import io.helidon.common.rest.ResponseHeaders;
 import io.helidon.webserver.spi.BareResponse;
 
 import io.opentracing.Span;

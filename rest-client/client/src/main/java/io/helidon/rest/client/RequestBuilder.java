@@ -27,7 +27,19 @@ import io.helidon.common.rest.ResponseChunk;
 public interface RequestBuilder {
     RequestBuilder property(String propertyName, Object propertyValue);
 
-    RequestBuilder header(String header, String value);
+    RequestBuilder header(String header, String... values);
+
+    RequestBuilder method(String method);
+
+    RequestBuilder queryParam(String name, String... values);
+
+    /**
+     * Override client proxy configuration
+     *
+     * @param proxy
+     * @return
+     */
+    RequestBuilder proxy(Proxy proxy);
 
     CompletionStage<ClientResponse> send();
 

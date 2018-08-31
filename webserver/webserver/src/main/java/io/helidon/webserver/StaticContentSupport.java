@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 
 import io.helidon.common.rest.Http;
+import io.helidon.common.rest.MediaType;
 
 /**
  * Serves 'static content' (files) from filesystem or using a classloader to the {@link WebServer WebServer}
