@@ -18,5 +18,7 @@ package io.helidon.rest.client;
 /**
  * TODO javadoc.
  */
+@FunctionalInterface
 public interface ClientService {
+    void apply(ClientServiceRequest request);
 }

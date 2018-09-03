@@ -14,16 +14,26 @@
  *  limitations under the License.
  *
  */
-package io.helidon.security.rest.client;
+package io.helidon.rest.client;
 
-import io.helidon.config.Config;
-import io.helidon.rest.client.ClientService;
-import io.helidon.security.Security;
+import java.util.Optional;
 
 /**
  * TODO javadoc.
  */
-public class ClientWebSecurity implements ClientService {
-    public static ClientWebSecurity from(Config config, Security security) {
+public class ClientException extends RuntimeException {
+    private ClientResponse response;
+
+    ClientException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    ClientException(String message, Throwable cause, ClientResponse response) {
+        super(message, cause);
+        this.response = response;
+    }
+
+    public Optional<ClientResponse> response() {
+        return Optional.ofNullable(response);
     }
 }

@@ -18,38 +18,33 @@ package io.helidon.rest.client;
 
 import java.util.concurrent.CompletionStage;
 
-import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.ContextualRegistry;
+import io.helidon.common.rest.HttpRequest;
 import io.helidon.common.rest.Parameters;
-import io.helidon.common.rest.RequestHeaders;
-import io.helidon.common.rest.ResponseChunk;
 
 /**
  * TODO javadoc.
  */
-public interface RequestBuilder {
-    RequestBuilder property(String propertyName, Object propertyValue);
+public interface ClientServiceRequest extends HttpRequest {
+    ClientRequestHeaders headers();
 
-    RequestBuilder header(String header, String... values);
+    ContextualRegistry context();
 
-    RequestBuilder method(String method);
-
-    RequestBuilder queryParam(String name, String... values);
+    void next();
 
     /**
-     * Override client proxy configuration
+     * Completes when the request part of this request is done (e.g. we have sent all headers and bytes).
      *
-     * @param proxy
      * @return
      */
-    RequestBuilder proxy(Proxy proxy);
+    CompletionStage<ClientServiceRequest> whenSent();
 
-    CompletionStage<ClientResponse> send();
+    /**
+     * Completes when the full processing of this request is done (e.g. we have received a full response).
+     *
+     * @return
+     */
+    CompletionStage<ClientServiceRequest> whenComplete();
 
-    <E> CompletionStage<ClientResponse> send(E entity);
-
-    CompletionStage<ClientResponse> send(Flow.Publisher<ResponseChunk> content);
-
-    RequestBuilder headers(RequestHeaders headers);
-
-    RequestBuilder queryParams(Parameters queryParams);
+    Parameters properties();
 }

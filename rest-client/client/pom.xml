@@ -29,5 +29,11 @@
             <artifactId>helidon-security</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- dtto - metrics -->
+        <dependency>
+            <groupId>io.helidon.microprofile.metrics</groupId>
+            <artifactId>helidon-metrics-se</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

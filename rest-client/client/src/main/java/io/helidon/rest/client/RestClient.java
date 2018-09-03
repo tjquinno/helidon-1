@@ -26,12 +26,9 @@ public interface RestClient {
     }
 
     static Builder builder() {
-        return builder(ContextualRegistry.create());
+        return new Builder();
     }
 
-    static Builder builder(ContextualRegistry registry) {
-        return new Builder(registry);
-    }
 
     RequestBuilder put(String url);
 
@@ -39,13 +36,15 @@ public interface RestClient {
 
     RequestBuilder request(String url);
 
+    RequestBuilder put(ContextualRegistry context, String url);
+
+    RequestBuilder get(ContextualRegistry context, String url);
+
+    RequestBuilder request(ContextualRegistry context, String url);
+
 
     final class Builder implements io.helidon.common.Builder<RestClient> {
-        private final ContextualRegistry registry;
-
-        private Builder(ContextualRegistry registry) {
-
-            this.registry = registry;
+        private Builder() {
         }
 
         @Override
@@ -54,6 +53,10 @@ public interface RestClient {
         }
 
         public Builder register(ClientService service) {
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
             return this;
         }
     }

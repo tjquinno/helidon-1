@@ -239,4 +239,6 @@ public interface ServerResponse {
      * @return a unique correlation ID associated with this response and its request
      */
     long requestId();
+
+    void proxy(io.helidon.rest.client.ClientResponse clientResponse);
 }

@@ -18,14 +18,15 @@ package io.helidon.rest.client.example.basic;
 import java.net.URI;
 import java.util.concurrent.CompletionStage;
 
-import io.helidon.common.rest.ContextualRegistry;
 import io.helidon.config.Config;
 import io.helidon.metrics.RegistryFactory;
+import io.helidon.metrics.rest.client.ClientMetrics;
 import io.helidon.rest.client.ClientResponse;
 import io.helidon.rest.client.Proxy;
 import io.helidon.rest.client.RestClient;
 import io.helidon.security.Security;
-import io.helidon.security.rest.client.ClientWebSecurity;
+import io.helidon.security.rest.client.ClientSecurity;
+import io.helidon.tracing.rest.client.ClientTracing;
 
 import io.opentracing.SpanContext;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -35,7 +36,7 @@ import org.eclipse.microprofile.metrics.MetricRegistry;
  */
 public class StandaloneClientExample {
     // todo should we handle support for fault tolerance?
-
+    // todo how to handle entity processors (e.g. how to add JSON-P, JSON-B support)
     public static void main(String[] args) {
         /*
          * Prepare helidon stuff
@@ -44,51 +45,41 @@ public class StandaloneClientExample {
         Security security = Security.fromConfig(config);
         RegistryFactory seMetricFactory = RegistryFactory.createSeFactory(config);
 
-        /*
-         * Registry will have to be configured with some stuff when using standalone.
-         * Maybe move this to explicit configuration on client builder to make is
-         * nicer for users?
-         */
-
-        // TODO we need to create a client instance outside of scope of server request
-        // TODO the registry is available within the scope of server request - so it should
-        // TODO be used to configure a single client request rather than the client instance
-        // TODO so how do we get the security instance etc. to configure a new client?
-        // TODO we may need to make the client instance lightweight - but that would cause
-        // TODO probably perf. issues as we could not manage resources
-        ContextualRegistry registry = ContextualRegistry.create();
-        // register the parent span context
-        registry.register(SpanContext.class, null);
-        // register the metrics registry factory
-        registry.register(seMetricFactory);
-        // and the application registry
-        registry.register(seMetricFactory.getRegistry(MetricRegistry.Type.APPLICATION));
 
         /*
          * Client must be thread safe (basically a pre-configured container)
          */
         RestClient client = RestClient.builder()
-                .register(ClientWebSecurity.from(config, security))
-                .register(ClientTracing.from(config))
-                .register(ClientMetrics.from(config))
+                // default configuration of client metrics
+                // REQUIRES: metrics registry configured on request context (injected by MetricsSupport)
+                .register(ClientMetrics.create(seMetricFactory, seMetricFactory.getRegistry(MetricRegistry.Type.APPLICATION)))
+                // default configuration of tracing
+                // REQUIRES: span context configured on request context (injected by future TracingSupport)
+                .register(ClientTracing.create())
+                // default configuration of client security - invokes outbound provider(s) and updates headers
+                // REQUIRES: security and security context configured on request context (injected by WebSecurity)
+                .register(ClientSecurity.create(security))
                 .proxy(Proxy.builder()
                                .http(URI.create("http://www-proxy.uk.oracle.com"))
                                .https(URI.create("https://www-proxy.uk.oracle.com"))
                                .addNoProxy("localhost")
-                               .addNoProxy("*.oracle.com"))
+                               .addNoProxy("*.oracle.com")
+                               .build())
                 .build();
+
+        SpanContext spanContext = null;
 
         /*
          * Each request is created using a builder like fluent api
          */
         CompletionStage<ClientResponse> response = client.put("http://www.google.com")
                 // parent span
-                .property(ClientTracing.PARENT_SPAM, aSpan)
+                .property(ClientTracing.PARENT_SPAN, spanContext)
                 // override tracing span
                 .property(ClientTracing.SPAN_NAME, "myspan")
                 // override metric name
                 .property(ClientMetrics.ENDPOINT_NAME, "aServiceName")
-                .property(ClientWebSecurity.PROVIDER_NAME, "http-basic-auth")
+                .property(ClientSecurity.PROVIDER_NAME, "http-basic-auth")
                 // override security
                 .property("io.helidon.security.outbound.username", "aUser")
                 // add custom header
@@ -125,7 +116,6 @@ public class StandaloneClientExample {
                 .method("CUSTOM")
                 .queryParam("a", "b", "c")
                 .send();
-
 
     }
 }

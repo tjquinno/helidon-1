@@ -16,13 +16,9 @@
 
 package io.helidon.webserver;
 
-import java.net.URI;
-import java.util.List;
-
 import io.helidon.common.rest.Content;
 import io.helidon.common.rest.ContextualRegistry;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.rest.HttpRequest;
 import io.helidon.common.rest.RequestHeaders;
 
 import io.opentracing.Span;
@@ -31,7 +27,7 @@ import io.opentracing.SpanContext;
 /**
  * Represents HTTP Request and provides WebServer related API.
  */
-public interface ServerRequest {
+public interface ServerRequest extends HttpRequest {
 
     /**
      * Continue request processing on the next registered handler.
@@ -66,67 +62,6 @@ public interface ServerRequest {
      * @return a request context
      */
     ContextualRegistry context();
-
-    /**
-     * Returns an HTTP request method. See also {@link Http.Method HTTP standard methods} utility class.
-     *
-     * @return an HTTP method
-     * @see Http.Method
-     */
-    Http.RequestMethod method();
-
-    /**
-     * Returns an HTTP version from the request line.
-     * <p>
-     * See {@link Http.Version HTTP Version} enumeration for supported versions.
-     * <p>
-     * If communication starts as a {@code HTTP/1.1} with {@code h2c} upgrade, then it will be automatically
-     * upgraded and this method returns {@code HTTP/2.0}.
-     *
-     * @return an HTTP version
-     */
-    Http.Version version();
-
-    /**
-     * Returns a Request-URI (or alternatively path) as defined in request line.
-     *
-     * @return a request URI
-     */
-    URI uri();
-
-    /**
-     * Returns an encoded query string without leading '?' character.
-     *
-     * @return an encoded query string
-     */
-    String query();
-
-    /**
-     * Returns query parameters.
-     *
-     * @return an parameters representing query parameters
-     */
-    Parameters queryParams();
-
-    /**
-     * Returns a path which was accepted by {@link PathMatcher} in actual routing. It is path without a context root
-     * of the routing.
-     * <p>
-     * Use {@link Path#absolute()} method to obtain absolute request URI path representation.
-     * <p>
-     * Returned {@link Path} also provide access to path template parameters. An absolute path then provides access to
-     * all (including) context parameters if any. In case of conflict between parameter names, most recent value is returned.
-     *
-     * @return a path
-     */
-    Path path();
-
-    /**
-     * Returns a decoded request URI fragment without leading hash '#' character.
-     *
-     * @return a decoded URI fragment
-     */
-    String fragment();
 
     /**
      * Returns the Internet Protocol (IP) address of the interface on which the request was received.
@@ -204,43 +139,4 @@ public interface ServerRequest {
      * @return the related span context
      */
     SpanContext spanContext();
-
-    /**
-     * Represents requested normalised URI path processed by {@link PathMatcher}.
-     */
-    interface Path {
-
-        /**
-         * Returns value of single parameter resolved by relevant {@link PathMatcher}.
-         *
-         * @param name a parameter name
-         * @return a parameter value or {@code null} if not exist
-         */
-        String param(String name);
-
-        /**
-         * Returns path as a list of its segments.
-         *
-         * @return a list of path segments
-         */
-        List<String> segments();
-
-        /**
-         * Returns a path string representation with leading slash.
-         *
-         * @return a path
-         */
-        String toString();
-
-        /**
-         * If the instance represents a path relative to some context root then returns absolute requested path otherwise
-         * returns this instance.
-         * <p>
-         * The absolute path also contains access to path parameters defined in context {@link PathMatcher}s. If there is
-         * name conflict then value represents latest matcher result.
-         *
-         * @return an absolute requested URI path
-         */
-        Path absolute();
-    }
 }

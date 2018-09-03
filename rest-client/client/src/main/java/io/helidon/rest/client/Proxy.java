@@ -18,6 +18,8 @@ package io.helidon.rest.client;
 
 import java.net.URI;
 
+import io.helidon.config.Config;
+
 /**
  * TODO javadoc.
  */
@@ -28,6 +30,19 @@ public interface Proxy {
 
     static Proxy noProxy() {
         return builder().build();
+    }
+
+    static Proxy create(Config config) {
+        return null;
+    }
+
+    /**
+     * Create from system props
+     *
+     * @return
+     */
+    static Proxy create() {
+        return null;
     }
 
     class Builder implements io.helidon.common.Builder<Proxy> {
