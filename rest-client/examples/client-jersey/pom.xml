@@ -17,5 +17,10 @@
             <artifactId>helidon-rest-client</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.helidon.microprofile.bundles</groupId>
+            <artifactId>helidon-microprofile-1.2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

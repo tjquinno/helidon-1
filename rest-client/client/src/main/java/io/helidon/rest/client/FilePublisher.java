@@ -16,28 +16,24 @@
  */
 package io.helidon.rest.client;
 
-import java.util.Optional;
+import java.nio.file.Path;
+
+import io.helidon.common.reactive.Flow;
+import io.helidon.common.rest.ResponseChunk;
 
 /**
- * TODO javadoc.
+ * A file reader, that sends chunks of data.
  */
-public class ClientException extends RuntimeException {
-    private ClientResponse response;
-
-    ClientException(String message) {
-        super(message);
+public final class FilePublisher implements Flow.Publisher<ResponseChunk> {
+    private FilePublisher() {
     }
 
-    ClientException(String message, Throwable cause) {
-        super(message, cause);
+    public static Flow.Publisher<ResponseChunk> create(Path filePath) {
+        return new FilePublisher();
     }
 
-    ClientException(String message, Throwable cause, ClientResponse response) {
-        super(message, cause);
-        this.response = response;
-    }
+    @Override
+    public void subscribe(Flow.Subscriber<? super ResponseChunk> subscriber) {
 
-    public Optional<ClientResponse> response() {
-        return Optional.ofNullable(response);
     }
 }
