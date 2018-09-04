@@ -17,8 +17,8 @@
 package io.helidon.metrics.rest.client;
 
 import io.helidon.metrics.RegistryFactory;
-import io.helidon.rest.client.ClientService;
 import io.helidon.rest.client.ClientServiceRequest;
+import io.helidon.rest.client.spi.ClientService;
 
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.MetricRegistry;

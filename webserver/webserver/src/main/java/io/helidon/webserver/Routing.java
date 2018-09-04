@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 import io.helidon.webserver.spi.BareRequest;
 import io.helidon.webserver.spi.BareResponse;
 

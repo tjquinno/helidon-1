@@ -16,8 +16,8 @@
  */
 package io.helidon.tracing.rest.client;
 
-import io.helidon.rest.client.ClientService;
 import io.helidon.rest.client.ClientServiceRequest;
+import io.helidon.rest.client.spi.ClientService;
 
 /**
  * TODO javadoc.

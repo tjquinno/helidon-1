@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
+import io.helidon.common.http.Parameters;
 import io.helidon.webserver.ReadOnlyParameters;
 import io.helidon.webserver.WebServer;
 

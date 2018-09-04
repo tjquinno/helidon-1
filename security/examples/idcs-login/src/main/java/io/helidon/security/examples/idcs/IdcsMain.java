@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.LogManager;
 
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 import io.helidon.config.Config;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;

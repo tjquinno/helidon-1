@@ -19,7 +19,7 @@ package io.helidon.webserver.examples.tutorial;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.testsupport.TestClient;
 import io.helidon.webserver.testsupport.TestResponse;

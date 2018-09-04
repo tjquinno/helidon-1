@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 
 /**
  * Represents a single routable {@link Handler} in the {@link Routing}.

@@ -4,7 +4,7 @@
 package io.helidon.rest.client.example.webserver;
 
 import io.helidon.common.OptionalHelper;
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 import io.helidon.config.Config;
 import io.helidon.metrics.rest.client.ClientMetrics;
 import io.helidon.rest.client.ClientException;
@@ -17,6 +17,7 @@ import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.json.JsonSupport;
 
 /**
  * TODO javadoc.
@@ -37,6 +38,9 @@ public class WebserverClientExample {
                 // default configuration of client security - invokes outbound provider(s) and updates headers
                 // REQUIRES: security and security context configured on request context (injected by WebSecurity)
                 .register(ClientSecurity.create())
+                // TODO now using server specific implementation - this would require changes to the handler implementation
+                // TODO so it is supported both by client and by server
+                .register(JsonSupport.get())
                 .proxy(Proxy.create(config))
                 .build();
 
@@ -51,6 +55,8 @@ public class WebserverClientExample {
 
     private static void put(ServerRequest req, ServerResponse res) {
         restClient.put(req.context(), "http://www.google.com")
+                // request specific handler
+                .register(JsonSupport.get())
                 .send(req.content())
                 .thenCompose(res::send)
                 .thenAccept(aResponse -> {
@@ -67,7 +73,8 @@ public class WebserverClientExample {
                 .send()
                 .thenAccept(clientResponse -> {
                     res.headers().add("CUSTOM_RESPONSE", "HEADER");
-                    res.proxy(clientResponse);
+                    res.status(clientResponse.status());
+                    res.send(clientResponse.content());
                 });
     }
 
@@ -76,7 +83,11 @@ public class WebserverClientExample {
                 .queryParams(req.queryParams())
                 .headers(req.headers())
                 .send(req.content())
-                .thenAccept(res::proxy)
+                .thenAccept(clientResponse -> {
+                    res.headers().add("CUSTOM_RESPONSE", "HEADER");
+                    res.status(clientResponse.status());
+                    res.send(clientResponse.content());
+                })
                 .exceptionally(throwable -> handleException(res, throwable));
 
     }

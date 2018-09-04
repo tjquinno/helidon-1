@@ -18,33 +18,47 @@ package io.helidon.rest.client;
 
 import java.util.concurrent.CompletionStage;
 
-import io.helidon.common.rest.ContextualRegistry;
-import io.helidon.common.rest.HttpRequest;
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.ContextualRegistry;
+import io.helidon.common.http.HttpRequest;
+import io.helidon.common.http.Parameters;
 
 /**
- * TODO javadoc.
+ * Request to SPI {@link io.helidon.rest.client.spi.ClientService} that supports modification of the outgoing request.
  */
 public interface ClientServiceRequest extends HttpRequest {
+    /**
+     * Configured request headers.
+     *
+     * @return headers (mutable)
+     */
     ClientRequestHeaders headers();
 
+    /**
+     * Registry that can be used to propagate information from server (e.g. security context, tracing spans etc.).
+     *
+     * @return registry propagated by the user
+     */
     ContextualRegistry context();
-
-    void next();
 
     /**
      * Completes when the request part of this request is done (e.g. we have sent all headers and bytes).
      *
-     * @return
+     * @return completion stage that finishes when we fully send request (including entity) to server
      */
     CompletionStage<ClientServiceRequest> whenSent();
 
     /**
      * Completes when the full processing of this request is done (e.g. we have received a full response).
      *
-     * @return
+     * @return completion stage that finishes when we receive and fully read response from the server
      */
     CompletionStage<ClientServiceRequest> whenComplete();
 
+    /**
+     * Properties configured by user when creating this client request.
+     *
+     * @return properties that were configured
+     * @see RequestBuilder#property(String, Object)
+     */
     Parameters properties();
 }

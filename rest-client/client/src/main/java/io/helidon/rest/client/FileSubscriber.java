@@ -25,13 +25,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.helidon.common.http.DataChunk;
 import io.helidon.common.reactive.Flow;
-import io.helidon.common.rest.RequestChunk;
 
 /**
  * A file writer that subscribes to chunks of data.
  */
-public final class FileSubscriber implements Flow.Subscriber<RequestChunk> {
+public final class FileSubscriber implements Flow.Subscriber<DataChunk> {
     private static final Logger LOGGER = Logger.getLogger(FileSubscriber.class.getName());
 
     private final Path filePath;
@@ -46,6 +46,14 @@ public final class FileSubscriber implements Flow.Subscriber<RequestChunk> {
         this.channel = channel;
     }
 
+    /**
+     * Create a subscriber that consumes {@link DataChunk DataChunks} and writes them to a file.
+     * A temporary file is created first to download the whole content and it is then moved to the final
+     * destination.
+     *
+     * @param filePath path of the final file
+     * @return subscriber to consume {@link DataChunk}
+     */
     public static FileSubscriber create(Path filePath) {
         // make sure we can write the path
         if (Files.exists(filePath)) {
@@ -68,7 +76,7 @@ public final class FileSubscriber implements Flow.Subscriber<RequestChunk> {
     }
 
     @Override
-    public void onNext(RequestChunk item) {
+    public void onNext(DataChunk item) {
         try {
             channel.write(item.data());
             // TODO not sure I can request this in onNext

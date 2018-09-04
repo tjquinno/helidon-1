@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Parameters;
 
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Test;

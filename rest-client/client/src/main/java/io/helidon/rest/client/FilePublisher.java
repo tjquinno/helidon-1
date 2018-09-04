@@ -18,22 +18,28 @@ package io.helidon.rest.client;
 
 import java.nio.file.Path;
 
+import io.helidon.common.http.DataChunk;
 import io.helidon.common.reactive.Flow;
-import io.helidon.common.rest.ResponseChunk;
 
 /**
  * A file reader, that sends chunks of data.
  */
-public final class FilePublisher implements Flow.Publisher<ResponseChunk> {
+public final class FilePublisher implements Flow.Publisher<DataChunk> {
     private FilePublisher() {
     }
 
-    public static Flow.Publisher<ResponseChunk> create(Path filePath) {
+    /**
+     * Create a new instance that will read the path provided and publish it as {@link DataChunk DataChunks}.
+     *
+     * @param filePath path to an existing file
+     * @return publisher of {@link DataChunk}
+     */
+    public static FilePublisher create(Path filePath) {
         return new FilePublisher();
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super ResponseChunk> subscriber) {
-
+    public void subscribe(Flow.Subscriber<? super DataChunk> subscriber) {
+        //TODO implement
     }
 }

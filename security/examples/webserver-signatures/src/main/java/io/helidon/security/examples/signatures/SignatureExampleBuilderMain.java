@@ -24,8 +24,8 @@ import java.util.Optional;
 
 import io.helidon.common.CollectionsHelper;
 import io.helidon.common.configurable.Resource;
+import io.helidon.common.http.MediaType;
 import io.helidon.common.pki.KeyConfig;
-import io.helidon.common.rest.MediaType;
 import io.helidon.security.CompositeProviderFlag;
 import io.helidon.security.CompositeProviderSelectionPolicy;
 import io.helidon.security.Security;

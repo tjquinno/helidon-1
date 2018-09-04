@@ -35,7 +35,17 @@ import org.eclipse.microprofile.metrics.MetricRegistry;
  * A standalone REST client.
  */
 public class StandaloneClientExample {
-    // todo should we handle support for fault tolerance?
+    static void simpleExample() throws Exception {
+        // read content and write it ot standard output
+        try (RestClient client = RestClient.create()) {
+            client.get("http://www.test.com")
+                    .send()
+                    .thenApply(ClientResponse::content)
+                    .thenCompose(content -> content.as(String.class))
+                    .thenAccept(System.out::println);
+        }
+    }
+
     // todo how to handle entity processors (e.g. how to add JSON-P, JSON-B support)
     public static void main(String[] args) {
         /*

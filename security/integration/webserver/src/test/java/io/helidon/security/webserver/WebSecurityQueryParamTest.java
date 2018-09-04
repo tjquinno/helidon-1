@@ -19,7 +19,7 @@ package io.helidon.security.webserver;
 import java.util.regex.Pattern;
 
 import io.helidon.common.CollectionsHelper;
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Parameters;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.SecurityEnvironment;
 import io.helidon.security.util.TokenHandler;

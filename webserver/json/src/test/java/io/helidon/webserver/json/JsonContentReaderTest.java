@@ -24,8 +24,8 @@ import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonObject;
 
+import io.helidon.common.http.DataChunk;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.common.rest.RequestChunk;
 
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsInstanceOf;
@@ -43,7 +43,7 @@ public class JsonContentReaderTest {
 
     @Test
     public void simpleJsonObject() throws Exception {
-        Flux<RequestChunk> flux = Flux.just("{ \"p\" : \"val\" }").map(s -> RequestChunk.from(s.getBytes()));
+        Flux<DataChunk> flux = Flux.just("{ \"p\" : \"val\" }").map(s -> DataChunk.from(s.getBytes()));
 
         CompletionStage<? extends JsonObject> stage = JsonSupport.get()
                                                                  .reader()
@@ -55,7 +55,7 @@ public class JsonContentReaderTest {
 
     @Test
     public void incompatibleTypes() throws Exception {
-        Flux<RequestChunk> flux = Flux.just("{ \"p\" : \"val\" }").map(s -> RequestChunk.from(s.getBytes()));
+        Flux<DataChunk> flux = Flux.just("{ \"p\" : \"val\" }").map(s -> DataChunk.from(s.getBytes()));
 
         CompletionStage<? extends JsonArray> stage = JsonSupport.get()
                 .reader()
@@ -74,7 +74,7 @@ public class JsonContentReaderTest {
 
     @Test
     public void simpleJsonArray() throws Exception {
-        Flux<RequestChunk> flux = Flux.just("[ \"val\" ]").map(s -> RequestChunk.from(s.getBytes()));
+        Flux<DataChunk> flux = Flux.just("[ \"val\" ]").map(s -> DataChunk.from(s.getBytes()));
 
         CompletionStage<? extends JsonArray> stage = JsonSupport.get()
                 .reader()
@@ -86,7 +86,7 @@ public class JsonContentReaderTest {
 
     @Test
     public void invalidJson() throws Exception {
-        Flux<RequestChunk> flux = Flux.just("{ \"p\" : \"val\" ").map(s -> RequestChunk.from(s.getBytes()));
+        Flux<DataChunk> flux = Flux.just("{ \"p\" : \"val\" ").map(s -> DataChunk.from(s.getBytes()));
 
         CompletionStage<? extends JsonObject> stage = JsonSupport.get()
                 .reader()

@@ -20,7 +20,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.util.Optional;
 
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Parameters;
 
 import org.junit.jupiter.api.Test;
 

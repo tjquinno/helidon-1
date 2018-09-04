@@ -19,7 +19,10 @@ package io.helidon.rest.client;
 import java.util.Optional;
 
 /**
- * TODO javadoc.
+ * An exception that caused this client request to fail. If the exception is based on status or content of response from
+ * server, the {@link ClientResponse} is available to obtain any needed details.
+ * If the exception was caused before data was sent, or due to timeouts, socket exceptions etc., the {@link ClientResponse} is
+ * not present and exception handling must be based on the wrapped exception.
  */
 public class ClientException extends RuntimeException {
     private ClientResponse response;
@@ -37,6 +40,11 @@ public class ClientException extends RuntimeException {
         this.response = response;
     }
 
+    /**
+     * {@link ClientResponse} that caused this exception if caused by response from server. Otherwise an empty {@link Optional}.
+     *
+     * @return ClientResponse if this client request reached the moment when a response is received.
+     */
     public Optional<ClientResponse> response() {
         return Optional.ofNullable(response);
     }

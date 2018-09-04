@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>io.helidon.common</groupId>
-            <artifactId>helidon-common-rest</artifactId>
+            <artifactId>helidon-common-http</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

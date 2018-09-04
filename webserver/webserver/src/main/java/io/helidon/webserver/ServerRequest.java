@@ -16,10 +16,9 @@
 
 package io.helidon.webserver;
 
-import io.helidon.common.rest.Content;
-import io.helidon.common.rest.ContextualRegistry;
-import io.helidon.common.rest.HttpRequest;
-import io.helidon.common.rest.RequestHeaders;
+import io.helidon.common.http.Content;
+import io.helidon.common.http.ContextualRegistry;
+import io.helidon.common.http.HttpRequest;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;

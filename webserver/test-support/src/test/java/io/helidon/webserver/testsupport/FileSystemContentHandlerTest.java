@@ -24,8 +24,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.StaticContentSupport;
 

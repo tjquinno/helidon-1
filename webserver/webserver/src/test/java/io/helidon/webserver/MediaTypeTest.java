@@ -19,7 +19,7 @@ package io.helidon.webserver;
 import java.util.Map;
 import java.util.Optional;
 
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;

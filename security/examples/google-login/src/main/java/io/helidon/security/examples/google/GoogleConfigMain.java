@@ -18,7 +18,7 @@ package io.helidon.security.examples.google;
 
 import java.util.Optional;
 
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 import io.helidon.config.Config;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.Subject;

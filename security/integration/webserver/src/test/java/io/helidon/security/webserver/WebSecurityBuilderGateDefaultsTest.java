@@ -26,8 +26,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
 import io.helidon.common.CollectionsHelper;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
 import io.helidon.config.Config;
 import io.helidon.security.AuditEvent;
 import io.helidon.security.Security;

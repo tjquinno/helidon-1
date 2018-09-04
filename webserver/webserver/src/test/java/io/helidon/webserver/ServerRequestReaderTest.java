@@ -20,8 +20,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import io.helidon.common.http.Reader;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.common.rest.Reader;
 
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.Test;

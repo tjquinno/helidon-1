@@ -19,8 +19,8 @@ package io.helidon.webserver.examples.comments;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
 import io.helidon.webserver.testsupport.MediaPublisher;
 import io.helidon.webserver.testsupport.TestClient;
 import io.helidon.webserver.testsupport.TestResponse;

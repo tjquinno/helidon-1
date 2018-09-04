@@ -23,14 +23,14 @@ import java.nio.charset.StandardCharsets;
 
 import javax.json.Json;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.HttpException;
-import io.helidon.common.rest.MediaType;
-import io.helidon.common.rest.Parameters;
-import io.helidon.common.rest.Reader;
-import io.helidon.common.rest.RequestChunk;
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
+import io.helidon.common.http.Parameters;
+import io.helidon.common.http.Reader;
 import io.helidon.webserver.ContentReaders;
 import io.helidon.webserver.Handler;
+import io.helidon.webserver.HttpException;
 import io.helidon.webserver.RequestPredicate;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.StaticContentSupport;
@@ -190,7 +190,7 @@ public class Main {
 
     /**
      * Request payload (body/entity) is represented by {@link io.helidon.common.reactive.Flow.Publisher Flow.Publisher}
-     * of {@link RequestChunk RequestChunks} to enable reactive processing of the content of any size.
+     * of {@link DataChunk RequestChunks} to enable reactive processing of the content of any size.
      * But it is more convenient to process entity in some type specific form. WebServer supports few types which can be
      * used te read the whole entity:
      * <ul>
@@ -227,10 +227,10 @@ public class Main {
 
     /**
      * It is possible register custom request content {@link Reader Reader}. It collects
-     * all {@link RequestChunk RequestChunks} into a single entity of the given type.
+     * all {@link DataChunk RequestChunks} into a single entity of the given type.
      * <p>
      * It is also possible to register filters which can modify original {@link io.helidon.common.reactive.Flow Flow} of
-     * {@link RequestChunk RequestChunks}.
+     * {@link DataChunk RequestChunks}.
      */
     public void filterAndProcessEntity() {
         Routing routing = Routing.builder()

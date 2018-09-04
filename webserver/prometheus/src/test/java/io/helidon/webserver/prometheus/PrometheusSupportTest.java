@@ -18,7 +18,7 @@ package io.helidon.webserver.prometheus;
 
 import java.util.concurrent.TimeUnit;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.testsupport.TestClient;
 import io.helidon.webserver.testsupport.TestRequest;

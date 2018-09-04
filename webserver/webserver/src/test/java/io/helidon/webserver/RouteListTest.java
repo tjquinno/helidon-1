@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import io.helidon.common.CollectionsHelper;
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 
 import org.junit.jupiter.api.Test;
 

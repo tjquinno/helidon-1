@@ -16,14 +16,36 @@
  */
 package io.helidon.rest.client;
 
-import io.helidon.common.rest.Content;
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Content;
+import io.helidon.common.http.Http;
 
 /**
- * TODO javadoc.
+ * Response from a server that was created for our request.
+ * An instance is created only if we receive a real response
+ * over HTTP. For other cases (e.g. a timeout) the flow ends
+ * exceptionally.
  */
 public interface ClientResponse {
+    /**
+     * Status of this response.
+     *
+     * @return HTTP status
+     */
     Http.ResponseStatus status();
 
+    /**
+     * Content to access entity.
+     * The content is never null, though it may be empty (e.g.
+     * for HTTP PUT method, we do not get any entity back).
+     *
+     * @return content
+     */
     Content content();
+
+    /**
+     * Headers of the HTTP response.
+     *
+     * @return headers that were present in the response from server
+     */
+    ClientResponseHeaders headers();
 }

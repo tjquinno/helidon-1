@@ -19,8 +19,8 @@ package io.helidon.webserver.testsupport;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.HttpException;
+import io.helidon.common.http.Http;
+import io.helidon.webserver.HttpException;
 import io.helidon.webserver.NotFoundException;
 import io.helidon.webserver.Routing;
 

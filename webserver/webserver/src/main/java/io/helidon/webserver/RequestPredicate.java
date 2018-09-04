@@ -18,7 +18,7 @@ package io.helidon.webserver;
 
 import java.util.function.Predicate;
 
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 
 /**
  * Fluent API to define complex request conditions. Suitable for definition of more complex routing in {@link Routing.Rules}.

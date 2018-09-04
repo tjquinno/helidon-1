@@ -30,10 +30,10 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.MediaType;
 
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.Http;
 import io.helidon.common.reactive.OutputStreamPublisher;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ConnectionClosedException;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
@@ -159,7 +159,7 @@ class ResponseWriter implements ContainerResponseWriter {
                                               ByteArrayOutputStream stream = new ByteArrayOutputStream();
                                               WritableByteChannel ch = Channels.newChannel(stream);
                                               ch.write(byteBuffer);
-                                              return new ResponseChunk(doFlush, ByteBuffer.wrap(stream.toByteArray()));
+                                              return new DataChunk(doFlush, ByteBuffer.wrap(stream.toByteArray()));
                                           } catch (IOException e) {
                                               throw new IllegalStateException("this never happens", e);
                                           }

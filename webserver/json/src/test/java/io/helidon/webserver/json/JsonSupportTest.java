@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonObject;
 
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
 import io.helidon.webserver.Handler;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.testsupport.MediaPublisher;

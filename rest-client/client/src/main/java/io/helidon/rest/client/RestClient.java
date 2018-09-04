@@ -15,28 +15,54 @@
  */
 package io.helidon.rest.client;
 
-import io.helidon.common.rest.ContextualRegistry;
+import io.helidon.common.http.ContextualRegistry;
+import io.helidon.rest.client.spi.ClientService;
+import io.helidon.webserver.Handler;
 
 /**
  * TODO javadoc.
  */
-public interface RestClient {
+public interface RestClient extends AutoCloseable {
+    /**
+     * Create a new rest client.
+     *
+     * @return
+     */
     static RestClient create() {
         return builder().build();
     }
 
+    /**
+     * Fluent API builder for client.
+     *
+     * @return
+     */
     static Builder builder() {
         return new Builder();
     }
 
-
+    /**
+     * Create a request builder for a put method.
+     *
+     * @param url
+     * @return
+     */
     RequestBuilder put(String url);
+
+    /**
+     * Create a request builder for a put method propagating context from server (or manually created one).
+     *
+     * @param context
+     * @param url
+     * @return
+     */
+    RequestBuilder put(ContextualRegistry context, String url);
 
     RequestBuilder get(String url);
 
     RequestBuilder request(String url);
 
-    RequestBuilder put(ContextualRegistry context, String url);
+
 
     RequestBuilder get(ContextualRegistry context, String url);
 
@@ -58,6 +84,13 @@ public interface RestClient {
 
         public Builder proxy(Proxy proxy) {
             return this;
+        }
+
+        // TODO this must be changed to "ClientHandler" or similar, or create a super interface usable both by
+        // TODO server and client - JSON support should be almos the same for client response and server request, and for
+        // TODO client request and server response
+        public Builder register(Handler jsonSupport) {
+            return null;
         }
     }
 }

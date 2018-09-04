@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.logging.LogManager;
 
 import io.helidon.common.CollectionsHelper;
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.provider.httpauth.HttpDigestAuthProvider;

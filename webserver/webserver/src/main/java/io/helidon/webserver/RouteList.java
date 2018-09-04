@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 
 /**
  * An immutable {@link java.util.List list} of {@link Route routes} optionally defined on some URI path context.

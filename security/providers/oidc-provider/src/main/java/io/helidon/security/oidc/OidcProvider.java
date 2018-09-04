@@ -42,7 +42,7 @@ import javax.ws.rs.core.Response;
 import io.helidon.common.CollectionsHelper;
 import io.helidon.common.Errors;
 import io.helidon.common.OptionalHelper;
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 import io.helidon.config.Config;
 import io.helidon.security.AuthenticationResponse;
 import io.helidon.security.EndpointConfig;

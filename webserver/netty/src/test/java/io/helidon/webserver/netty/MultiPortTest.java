@@ -27,8 +27,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
 import io.helidon.common.configurable.Resource;
+import io.helidon.common.http.Http;
 import io.helidon.common.pki.KeyConfig;
-import io.helidon.common.rest.Http;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.webserver.Handler;

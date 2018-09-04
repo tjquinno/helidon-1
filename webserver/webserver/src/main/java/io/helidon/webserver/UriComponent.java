@@ -19,7 +19,7 @@ package io.helidon.webserver;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Parameters;
 
 /**
  * Extracted from Jersey

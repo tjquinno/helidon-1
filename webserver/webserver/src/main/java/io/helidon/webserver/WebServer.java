@@ -22,7 +22,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
-import io.helidon.common.rest.ContextualRegistry;
+import io.helidon.common.SpiHelper;
+import io.helidon.common.http.ContextualRegistry;
 import io.helidon.webserver.spi.WebServerFactory;
 
 /**
@@ -310,7 +311,7 @@ public interface WebServer {
                 throw new IllegalStateException("No server socket configuration found for named routings: " + unpairedRoutings);
             }
 
-            WebServer result = Utils.loadSpi(WebServerFactory.class)
+            WebServer result = SpiHelper.loadSpi(WebServerFactory.class)
                                     .newWebServer(configuration == null
                                                           ? ServerBasicConfig.DEFAULT_CONFIGURATION
                                                           : configuration,

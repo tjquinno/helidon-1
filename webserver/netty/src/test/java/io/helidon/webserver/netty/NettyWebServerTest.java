@@ -28,11 +28,10 @@ import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.Http;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
 import io.helidon.common.reactive.SubmissionPublisher;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.RequestChunk;
-import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.SocketConfiguration;
@@ -84,14 +83,14 @@ public class NettyWebServerTest {
                     long id = new SecureRandom().nextLong();
                     System.out.println("Received request .. ID: " + id);
 
-                    Flux<RequestChunk> publisher = ReactiveStreamsAdapter.publisherFromFlow(breq.bodyPublisher());
+                    Flux<DataChunk> publisher = ReactiveStreamsAdapter.publisherFromFlow(breq.bodyPublisher());
 
-                    SubmissionPublisher<ResponseChunk> responsePublisher = new SubmissionPublisher<>(ForkJoinPool.commonPool(),
-                                                                                                     1024);
+                    SubmissionPublisher<DataChunk> responsePublisher = new SubmissionPublisher<>(ForkJoinPool.commonPool(),
+                                                                                                 1024);
                     responsePublisher.subscribe(bres);
 
                     // Read request and immediately write to response
-                    publisher.subscribe(new BaseSubscriber<RequestChunk>() {
+                    publisher.subscribe(new BaseSubscriber<DataChunk>() {
 
                         private volatile Subscription subscription;
 
@@ -106,8 +105,8 @@ public class NettyWebServerTest {
                         }
 
                         @Override
-                        protected void hookOnNext(RequestChunk chunk) {
-                            ResponseChunk responseChunk = new ResponseChunk(true, chunk.data(), chunk::release);
+                        protected void hookOnNext(DataChunk chunk) {
+                            DataChunk responseChunk = new DataChunk(true, chunk.data(), chunk::release);
                             responsePublisher.submit(responseChunk);
 
                             ForkJoinPool.commonPool().submit(() -> {

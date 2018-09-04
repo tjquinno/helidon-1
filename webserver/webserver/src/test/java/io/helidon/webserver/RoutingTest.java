@@ -18,7 +18,7 @@ package io.helidon.webserver;
 
 import java.util.Arrays;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

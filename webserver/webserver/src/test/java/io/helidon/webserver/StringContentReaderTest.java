@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.helidon.common.CollectionsHelper;
+import io.helidon.common.http.DataChunk;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.common.rest.RequestChunk;
 import io.helidon.webserver.spi.BareRequest;
 
 import org.hamcrest.core.Is;
@@ -53,7 +53,7 @@ public class StringContentReaderTest {
 
     @Test
     public void invalidCharsetTest() throws Exception {
-        Flux<RequestChunk> flux = Flux.just("2010-01-02").map(s -> RequestChunk.from(s.getBytes()));
+        Flux<DataChunk> flux = Flux.just("2010-01-02").map(s -> DataChunk.create(s.getBytes()));
 
         CompletableFuture<? extends String> future =
                 new StringContentReader("invalid-charset-name")
@@ -79,7 +79,7 @@ public class StringContentReaderTest {
 
     @Test
     public void charsetTest() throws Exception {
-        Flux<RequestChunk> flux = Flux.just(RequestChunk.from(new byte[] {(byte) 225, (byte) 226, (byte) 227}));
+        Flux<DataChunk> flux = Flux.just(DataChunk.create(new byte[] {(byte) 225, (byte) 226, (byte) 227}));
 
         CompletableFuture<? extends String> future =
                 new StringContentReader("cp1250")

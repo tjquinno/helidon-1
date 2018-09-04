@@ -33,9 +33,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.helidon.common.InputStreamHelper;
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.Http;
 import io.helidon.common.reactive.ReactiveStreamsAdapter;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.testsupport.LoggingTestUtils;
@@ -103,10 +103,10 @@ public class ResponseOrderingTest {
                                  .any("/stream", (req, res) -> {
                                      res.status(Http.Status.ACCEPTED_202);
 
-                                     Flux<ResponseChunk> flux =
+                                     Flux<DataChunk> flux =
                                              ReactiveStreamsAdapter.publisherFromFlow(req.content())
                                                            .map(chunk -> {
-                                                               return new ResponseChunk(false, chunk.data(), chunk::release);
+                                                               return new DataChunk(false, chunk.data(), chunk::release);
                                                            });
                                      res.send(ReactiveStreamsAdapter.publisherToFlow(flux));
                                  })

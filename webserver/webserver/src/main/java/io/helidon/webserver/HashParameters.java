@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
-import io.helidon.common.rest.Parameters;
+import io.helidon.common.http.Parameters;
 
 /**
  * A {@link ConcurrentSkipListMap} based {@link Parameters} implementation with

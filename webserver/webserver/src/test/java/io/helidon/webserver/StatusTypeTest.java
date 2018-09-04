@@ -16,7 +16,7 @@
 
 package io.helidon.webserver;
 
-import io.helidon.common.rest.Http;
+import io.helidon.common.http.Http;
 
 import org.junit.jupiter.api.Test;
 

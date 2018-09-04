@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import io.helidon.common.rest.RequestChunk;
+import io.helidon.common.http.DataChunk;
 
 import org.hamcrest.Description;
 import org.hamcrest.FeatureMatcher;
@@ -191,7 +191,7 @@ public class TestUtils {
         assertThat(map, matcher(() -> map.get("my-key"), Is.is("my-value")));
     }
 
-    public static String requestChunkAsString(RequestChunk chunk) {
+    public static String requestChunkAsString(DataChunk chunk) {
         try {
             return new String(chunk.bytes());
         } finally {

@@ -20,7 +20,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.helidon.common.rest.MediaType;
+import io.helidon.common.http.MediaType;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;

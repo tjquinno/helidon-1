@@ -23,10 +23,10 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.MediaType;
+import io.helidon.common.http.Reader;
 import io.helidon.common.reactive.Flow;
-import io.helidon.common.rest.MediaType;
-import io.helidon.common.rest.Reader;
-import io.helidon.common.rest.RequestChunk;
 
 /**
  * The StringContentReader provides means to convert a {@link ByteBuffer} publisher to
@@ -89,7 +89,7 @@ public class StringContentReader implements Reader<String> {
      * {@link IllegalArgumentException}
      */
     @Override
-    public CompletionStage<String> apply(Flow.Publisher<RequestChunk> publisher, Class<? super String> clazz) {
+    public CompletionStage<String> apply(Flow.Publisher<DataChunk> publisher, Class<? super String> clazz) {
         if (charset != null) {
             return ContentReaders
                     .byteArrayReader()

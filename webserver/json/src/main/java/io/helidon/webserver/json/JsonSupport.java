@@ -32,13 +32,13 @@ import javax.json.JsonStructure;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 
+import io.helidon.common.http.Content;
+import io.helidon.common.http.DataChunk;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
+import io.helidon.common.http.Parameters;
+import io.helidon.common.http.Reader;
 import io.helidon.common.reactive.Flow;
-import io.helidon.common.rest.Content;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
-import io.helidon.common.rest.Parameters;
-import io.helidon.common.rest.Reader;
-import io.helidon.common.rest.ResponseChunk;
 import io.helidon.webserver.ContentReaders;
 import io.helidon.webserver.ContentWriters;
 import io.helidon.webserver.Handler;
@@ -267,12 +267,12 @@ public final class JsonSupport implements Service, Handler {
 
     /**
      * Returns a function (writer) converting {@link JsonStructure} to the {@link Flow.Publisher Publisher}
-     * of {@link ResponseChunk}s.
+     * of {@link DataChunk}s.
      *
      * @param charset a charset to use or {@code null} for default charset
      * @return created function
      */
-    public Function<JsonStructure, Flow.Publisher<ResponseChunk>> writer(Charset charset) {
+    public Function<JsonStructure, Flow.Publisher<DataChunk>> writer(Charset charset) {
         return json -> {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             JsonWriter writer = (charset == null)
@@ -287,11 +287,11 @@ public final class JsonSupport implements Service, Handler {
 
     /**
      * Returns a function (writer) converting {@link JsonStructure} to the {@link Flow.Publisher Publisher}
-     * of {@link ResponseChunk}s.
+     * of {@link DataChunk}s.
      *
      * @return created function
      */
-    public Function<JsonStructure, Flow.Publisher<ResponseChunk>> writer() {
+    public Function<JsonStructure, Flow.Publisher<DataChunk>> writer() {
         return writer(null);
     }
 

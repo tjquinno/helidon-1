@@ -38,10 +38,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.helidon.common.OptionalHelper;
-import io.helidon.common.rest.Http;
-import io.helidon.common.rest.MediaType;
-import io.helidon.common.rest.Parameters;
-import io.helidon.common.rest.ResponseHeaders;
+import io.helidon.common.http.AlreadyCompletedException;
+import io.helidon.common.http.Http;
+import io.helidon.common.http.MediaType;
+import io.helidon.common.http.Parameters;
+import io.helidon.common.http.SetCookie;
+import io.helidon.common.http.Utils;
 import io.helidon.webserver.spi.BareResponse;
 
 /**

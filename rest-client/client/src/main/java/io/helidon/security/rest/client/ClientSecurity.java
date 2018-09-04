@@ -18,8 +18,8 @@ package io.helidon.security.rest.client;
 
 import java.util.UUID;
 
-import io.helidon.rest.client.ClientService;
 import io.helidon.rest.client.ClientServiceRequest;
+import io.helidon.rest.client.spi.ClientService;
 import io.helidon.security.EndpointConfig;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
