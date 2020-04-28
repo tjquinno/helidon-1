@@ -42,6 +42,9 @@ module io.helidon.microprofile.server {
             io.helidon.microprofile.server.ServerCdiExtension,
             io.helidon.microprofile.server.JaxRsCdiExtension;
 
+    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
+            with io.helidon.microprofile.server.WadlChecker;
+
     // needed when running with modules - to make private methods accessible
     opens io.helidon.microprofile.server to weld.core.impl;
 }

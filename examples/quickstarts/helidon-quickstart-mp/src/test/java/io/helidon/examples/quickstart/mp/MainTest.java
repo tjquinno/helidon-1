@@ -25,11 +25,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.helidon.common.http.Http;
 import io.helidon.microprofile.server.Server;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class MainTest {
@@ -84,6 +86,29 @@ class MainTest {
                 .get();
         Assertions.assertEquals(200, r.getStatus(), "GET health status code");
     }
+
+    @Test
+    void testOptions() {
+        Client client = ClientBuilder.newClient();
+
+        Response r = client
+                .target(getConnectionString("/greet/greeting"))
+                .request()
+                .options();
+
+        Assertions.assertEquals(200, r.getStatus());
+        String allow = r.getHeaderString("Allow");
+        String whichHeader = "Allow";
+        if (allow == null) {
+            allow = r.getHeaderString("Access-Control-Allow-Methods");
+            whichHeader = "Access-Control-Allow-Methods";
+        }
+
+        Assertions.assertNotNull(allow, "Neither Allow nor Access-Control-Allow-Methods was present in returned headers");
+        Assertions.assertTrue(allow.contains("PUT"), "Header " + whichHeader + " exists but contents " + allow + " did not " +
+                "contain PUT");
+    }
+
 
     @AfterAll
     static void destroyClass() {

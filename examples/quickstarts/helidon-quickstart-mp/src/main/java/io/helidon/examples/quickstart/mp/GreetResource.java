@@ -25,6 +25,7 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -134,6 +135,12 @@ public class GreetResource {
         greetingProvider.setMessage(newGreeting);
         return Response.status(Response.Status.NO_CONTENT).build();
     }
+
+//    @Path("/greeting")
+//    @OPTIONS
+//    public Response describeUpdateGreeting() {
+//        return Response.ok().header("Allow", "PUT").build();
+//    }
 
     private JsonObject createResponse(String who) {
         String msg = String.format("%s %s!", greetingProvider.getMessage(), who);

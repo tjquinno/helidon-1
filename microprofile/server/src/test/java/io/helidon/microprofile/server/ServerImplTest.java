@@ -25,13 +25,18 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.helidon.common.configurable.ThreadPoolSupplier;
 
+import io.helidon.common.http.Http;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -101,6 +106,37 @@ class ServerImplTest {
 
             assertThat(first, startsWith("test1: helidon-"));
             assertThat(second, startsWith("test2: helidon-"));
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    void testOpts() {
+        Server server = Server.builder()
+                .addApplication("/app1", new TestApplication1())
+                .build();
+
+        server.start();
+
+        try {
+            WebTarget target = client.target("http://localhost:" + server.port());
+
+            Response r = target
+                    .path("/app1/test1")
+                    .request()
+                    .accept(MediaType.WILDCARD)
+                    .get();
+
+            assertThat(r.getStatus(), is(200));
+
+            r = target
+                    .path("/app1/test1")
+                    .request()
+                    .accept(MediaType.WILDCARD)
+                    .options();
+
+            assertThat(r.getStatus(), is(200));
         } finally {
             server.stop();
         }
