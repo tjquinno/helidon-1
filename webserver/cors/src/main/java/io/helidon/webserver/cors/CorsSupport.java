@@ -16,15 +16,21 @@
  */
 package io.helidon.webserver.cors;
 
+import java.util.Optional;
+
 import io.helidon.config.Config;
 import io.helidon.config.MissingValueException;
-
-import static io.helidon.webserver.cors.Aggregator.PATHLESS_KEY;
+import io.helidon.webserver.Handler;
+import io.helidon.webserver.Routing;
+import io.helidon.webserver.ServerRequest;
+import io.helidon.webserver.ServerResponse;
+import io.helidon.webserver.Service;
 
 /**
  * SE implementation of {@link CorsSupportBase}.
  */
-public class CorsSupport extends CorsSupportBase {
+public class CorsSupport extends CorsSupportBase<ServerRequest, ServerResponse, CorsSupport, CorsSupport.Builder>
+        implements Service, Handler {
 
     private CorsSupport(Builder builder) {
         super(builder);
@@ -46,6 +52,34 @@ public class CorsSupport extends CorsSupportBase {
         return builder().build();
     }
 
+    @Override
+    public void update(Routing.Rules rules) {
+        if (helper().isActive()) {
+            rules.any(this);
+        }
+    }
+
+    @Override
+    public void accept(ServerRequest request, ServerResponse response) {
+        if (!helper().isActive()) {
+            request.next();
+            return;
+        }
+        RequestAdapter<ServerRequest> requestAdapter = new RequestAdapterSe(request);
+        ResponseAdapter<ServerResponse> responseAdapter = new ResponseAdapterSe(response);
+
+        Optional<ServerResponse> responseOpt = helper().processRequest(requestAdapter, responseAdapter);
+
+        responseOpt.ifPresentOrElse(ServerResponse::send, () -> prepareCORSResponseAndContinue(requestAdapter, responseAdapter));
+    }
+
+    private void prepareCORSResponseAndContinue(RequestAdapter<ServerRequest> requestAdapter,
+            ResponseAdapter<ServerResponse> responseAdapter) {
+        helper().prepareResponse(requestAdapter, responseAdapter);
+
+        requestAdapter.next();
+    }
+
     /**
      * Creates a new {@code CorsSupport} instance based on the provided configuration expected to match the basic
      * {@code CrossOriginConfig} format.
@@ -57,11 +91,35 @@ public class CorsSupport extends CorsSupportBase {
         if (!config.exists()) {
             throw MissingValueException.create(config.key());
         }
-        Builder builder = builder().addCrossOrigin(PATHLESS_KEY, CrossOriginConfig.builder(config).build());
-        return builder.build();
+        return builder().config(config).build();
     }
 
-    public static class Builder extends CorsSupportBase.Builder<CorsSupport, Builder> {
+    /**
+     * Creates a new {@code CorsSupport} instance based on the provided configuration expected to contain mapped cross-origin
+     * config information.
+     *
+     * @param config node containing the mapped cross-origin information
+     * @return initialized {@code CorsSupport} instance
+     */
+    public static CorsSupport createMapped(Config config) {
+        if (!config.exists()) {
+            throw MissingValueException.create(config.key());
+        }
+        return builder().mappedConfig(config).build();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("CorsSupport[%s]{%s}", name(), describe());
+    }
+
+    public static class Builder extends CorsSupportBase.Builder<ServerRequest, ServerResponse, CorsSupport, Builder> {
+
+        private static int builderCount = 0; // To help distinguish otherwise-unnamed CorsSupport instances in log messages
+
+        Builder() {
+            name("SE " + builderCount++); // Initial name. The developer can (should) provide a more descriptive one.
+        }
 
         @Override
         public CorsSupport build() {

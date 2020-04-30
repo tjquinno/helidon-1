@@ -64,7 +64,9 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
     CrossOriginFilter() {
         Config config = (Config) ConfigProvider.getConfig();
 
-        cors = CorsSupportMp.builder().config(config.get(CORS_CONFIG_KEY))
+        CorsSupportMp.Builder corsBuilder = CorsSupportMp.builder();
+        config.get(CORS_CONFIG_KEY).ifExists(corsBuilder::mappedConfig);
+        cors = corsBuilder
                 .secondaryLookupSupplier(this::crossOriginFromAnnotationSupplier)
                 .build();
     }
@@ -85,6 +87,11 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
         // If not found, inspect resource matched
         Method resourceMethod = resourceInfo.getResourceMethod();
         Class<?> resourceClass = resourceInfo.getResourceClass();
+
+        // Not available if matching failed and error response is returned
+        if (resourceClass == null || resourceMethod == null) {
+            return Optional.empty();
+        }
 
         CrossOrigin corsAnnot;
         OPTIONS optsAnnot = resourceMethod.getAnnotation(OPTIONS.class);
