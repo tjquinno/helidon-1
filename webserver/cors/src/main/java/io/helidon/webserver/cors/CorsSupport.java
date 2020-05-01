@@ -70,14 +70,12 @@ public class CorsSupport extends CorsSupportBase<ServerRequest, ServerResponse, 
 
         Optional<ServerResponse> responseOpt = helper().processRequest(requestAdapter, responseAdapter);
 
-        responseOpt.ifPresentOrElse(ServerResponse::send, () -> prepareCORSResponseAndContinue(requestAdapter, responseAdapter));
-    }
-
-    private void prepareCORSResponseAndContinue(RequestAdapter<ServerRequest> requestAdapter,
-            ResponseAdapter<ServerResponse> responseAdapter) {
-        helper().prepareResponse(requestAdapter, responseAdapter);
-
-        requestAdapter.next();
+        if (responseOpt.isPresent()) {
+            responseOpt.get().send();
+        } else {
+            helper().augmentResponse(requestAdapter, responseAdapter);
+            requestAdapter.next();
+        }
     }
 
     /**

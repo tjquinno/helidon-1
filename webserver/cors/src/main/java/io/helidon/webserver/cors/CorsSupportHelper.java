@@ -292,9 +292,6 @@ class CorsSupportHelper<Q, R> {
             return Optional.empty();
         }
 
-        Optional<CrossOriginConfig> crossOrigin = aggregator.lookupCrossOrigin(requestAdapter.path(),
-                secondaryCrossOriginLookup);
-
         RequestType requestType = requestType(requestAdapter);
 
         if (requestType == RequestType.NORMAL) {
@@ -302,7 +299,11 @@ class CorsSupportHelper<Q, R> {
             return Optional.empty();
         }
 
-        // If this is a CORS request of some sort and there is no matching CORS configuration, deny the request.
+        Optional<CrossOriginConfig> crossOrigin = aggregator.lookupCrossOrigin(requestAdapter.path(),
+                secondaryCrossOriginLookup);
+
+        // At this point we know this is a CORS request of some sort, so if we find no matching CORS configuration, deny the
+        // request.
         if (crossOrigin.isEmpty()) {
             return Optional.of(forbid(requestAdapter, responseAdapter, ORIGIN_DENIED,
                     () -> "no matching CORS configuration for path " + requestAdapter.path()));
@@ -327,7 +328,7 @@ class CorsSupportHelper<Q, R> {
                 return Optional.of(result);
 
             case CORS:
-                Optional<R> corsResponse = processCorsRequest(crossOrigin, requestAdapter,
+                Optional<R> corsResponse = processCorsActualRequest(crossOrigin, requestAdapter,
                         responseAdapter);
                 return corsResponse;
 
@@ -337,12 +338,14 @@ class CorsSupportHelper<Q, R> {
     }
 
     /**
-     * Prepares a response with CORS headers, if the supplied request is in fact a CORS request.
+     * Augments a response with CORS headers, if the supplied request is in fact a CORS request.
+     *
+     * The response has already been prepared by the application. Now we add CORS headers to it as needed.
      *
      * @param requestAdapter abstraction of a request
      * @param responseAdapter abstraction of a response
      */
-    public void prepareResponse(RequestAdapter<Q> requestAdapter, ResponseAdapter<R> responseAdapter) {
+    public void augmentResponse(RequestAdapter<Q> requestAdapter, ResponseAdapter<R> responseAdapter) {
         if (!isActive()) {
             decisionLog(() -> String.format("CORS ignoring request %s; CORS processing is inactive", requestAdapter));
             return;
@@ -419,7 +422,7 @@ class CorsSupportHelper<Q, R> {
      * @return Optional of an error response if the request was an invalid CORS request; Optional.empty() if it was a
      *         valid CORS request
      */
-    Optional<R> processCorsRequest(
+    Optional<R> processCorsActualRequest(
             CrossOriginConfig crossOriginConfig,
             RequestAdapter<Q> requestAdapter,
             ResponseAdapter<R> responseAdapter) {
@@ -439,7 +442,7 @@ class CorsSupportHelper<Q, R> {
     }
 
     /**
-     * Prepares a CORS response by updating the response's headers.
+     * Updates the response's headers to reflect CORS processing.
      *
      * @param crossOrigin the CORS settings to apply to the response
      * @param requestAdapter request adapter

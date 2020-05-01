@@ -80,7 +80,7 @@ public abstract class CorsSupportBase<Q, R, T extends CorsSupportBase<Q, R, T, B
      * @param responseAdapter wrapper around the reseponse
      */
     protected void prepareResponse(RequestAdapter<Q> requestAdapter, ResponseAdapter<R> responseAdapter) {
-        helper.prepareResponse(requestAdapter, responseAdapter);
+        helper.augmentResponse(requestAdapter, responseAdapter);
     }
 
     protected CorsSupportHelper<Q, R> helper() {
