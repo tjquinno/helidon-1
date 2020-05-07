@@ -154,26 +154,38 @@ public class CrossOriginTest {
 
         @PUT
         @Path("/subpath")
+        @CrossOrigin({"http://foo.com", "http://there.com"})
         public Response put() {
             return Response.ok().build();
         }
 
         @GET
+        @Path("/subpath")
+        @CrossOrigin()
+        public Response getSub() {
+            return Response.ok().build();
+        }
+
+        @GET
+        @CrossOrigin()
         public Response get() {
             return Response.ok().build();
         }
 
         @OPTIONS
-        @CrossOrigin(value = {"http://foo.bar", "http://bar.foo"},
-                allowMethods = {"PUT"})
-        @Path("/subpath")
-        public void optionsForSubpath() {
+        public void options() {
         }
-
-        @OPTIONS
-        @CrossOrigin()
-        public void optionsForMainPath() {
-        }
+//        @OPTIONS
+//        @CrossOrigin(value = {"http://foo.bar", "http://bar.foo"},
+//                allowMethods = {"PUT"})
+//        @Path("/subpath")
+//        public void optionsForSubpath() {
+//        }
+//
+//        @OPTIONS
+//        @CrossOrigin()
+//        public void optionsForMainPath() {
+//        }
     }
 
     @Test

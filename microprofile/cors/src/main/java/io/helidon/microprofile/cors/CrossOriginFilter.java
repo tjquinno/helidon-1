@@ -17,8 +17,16 @@
 package io.helidon.microprofile.cors;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.ws.rs.OPTIONS;
@@ -29,14 +37,17 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import io.helidon.common.HelidonFeatures;
 import io.helidon.common.HelidonFlavor;
 import io.helidon.config.Config;
 import io.helidon.microprofile.cors.CorsSupportMp.RequestAdapterMp;
 import io.helidon.microprofile.cors.CorsSupportMp.ResponseAdapterMp;
+import io.helidon.webserver.cors.CorsSupport;
 import io.helidon.webserver.cors.CrossOriginConfig;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -59,7 +70,15 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
     @Context
     private ResourceInfo resourceInfo;
 
+    @Context
+    Application application;
+
+    @Context
+    UriInfo uriInfo;
+
     private final CorsSupportMp cors;
+
+    private final CorsSupportManager manager = new CorsSupportManager();
 
     CrossOriginFilter() {
         Config config = (Config) ConfigProvider.getConfig();
@@ -69,17 +88,21 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
         cors = corsBuilder
                 .secondaryLookupSupplier(this::crossOriginFromAnnotationSupplier)
                 .build();
+
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        Optional<Response> response = cors.processRequest(new RequestAdapterMp(requestContext), new ResponseAdapterMp());
+        CorsSupportMp cs = manager.get(application, resourceInfo, uriInfo);
+        Optional<Response> response = cs.processRequest(new RequestAdapterMp(requestContext), new ResponseAdapterMp());
         response.ifPresent(requestContext::abortWith);
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        cors.prepareResponse(new RequestAdapterMp(requestContext), new ResponseAdapterMp(responseContext));
+        CorsSupportMp cs = manager.get(application, resourceInfo, uriInfo);
+
+        cs.prepareResponse(new RequestAdapterMp(requestContext), new ResponseAdapterMp(responseContext));
     }
 
     Optional<CrossOriginConfig> crossOriginFromAnnotationSupplier() {
@@ -119,7 +142,7 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
         return Optional.ofNullable(corsAnnot == null ? null : annotationToConfig(corsAnnot));
     }
 
-    private static CrossOriginConfig annotationToConfig(CrossOrigin crossOrigin) {
+    static CrossOriginConfig annotationToConfig(CrossOrigin crossOrigin) {
         return CrossOriginConfig.builder()
             .allowOrigins(crossOrigin.value())
             .allowHeaders(crossOrigin.allowHeaders())
