@@ -37,7 +37,6 @@ import io.helidon.common.HelidonFlavor;
 import io.helidon.config.Config;
 import io.helidon.microprofile.cors.CorsSupportMp.RequestAdapterMp;
 import io.helidon.microprofile.cors.CorsSupportMp.ResponseAdapterMp;
-import io.helidon.webserver.cors.CrossOriginConfig;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -59,74 +58,84 @@ class CrossOriginFilter implements ContainerRequestFilter, ContainerResponseFilt
     @Context
     private ResourceInfo resourceInfo;
 
-    private final CorsSupportMp cors;
+//    private final CorsSupportMp cors;
+
+    private final CorsSupportManager corsSupportManager;
 
     CrossOriginFilter() {
         Config config = (Config) ConfigProvider.getConfig();
+        corsSupportManager = CorsSupportManager.create(config.get(CORS_CONFIG_KEY));
 
-        CorsSupportMp.Builder corsBuilder = CorsSupportMp.builder();
-        config.get(CORS_CONFIG_KEY).ifExists(corsBuilder::mappedConfig);
-        cors = corsBuilder
-                .secondaryLookupSupplier(this::crossOriginFromAnnotationSupplier)
-                .build();
+//        CorsSupportMp.Builder corsBuilder = CorsSupportMp.builder();
+//        config.get(CORS_CONFIG_KEY).ifExists(corsBuilder::mappedConfig);
+//        cors = corsBuilder
+//                .secondaryLookupSupplier(this::crossOriginFromAnnotationSupplier)
+//                .build();
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        Optional<Response> response = cors.processRequest(new RequestAdapterMp(requestContext), new ResponseAdapterMp());
+        corsSupportManager.corsSupport(resourceInfo.getResourceClass(), requestContext.getUriInfo().getPath())
+                .ifPresent(support -> processRequest(requestContext, support));
+    }
+
+    private void processRequest(ContainerRequestContext requestContext, CorsSupportMp corsSupport) {
+        Optional<Response> response = corsSupport.processRequest(new RequestAdapterMp(requestContext), new ResponseAdapterMp());
         response.ifPresent(requestContext::abortWith);
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        cors.prepareResponse(new RequestAdapterMp(requestContext), new ResponseAdapterMp(responseContext));
+        corsSupportManager.corsSupport(resourceInfo.getResourceClass(), requestContext.getUriInfo().getPath())
+                .ifPresent(corsSupport ->
+                    corsSupport.prepareResponse(new RequestAdapterMp(requestContext), new ResponseAdapterMp(responseContext)));
     }
 
-    Optional<CrossOriginConfig> crossOriginFromAnnotationSupplier() {
-
-        // If not found, inspect resource matched
-        Method resourceMethod = resourceInfo.getResourceMethod();
-        Class<?> resourceClass = resourceInfo.getResourceClass();
-
-        // Not available if matching failed and error response is returned
-        if (resourceClass == null || resourceMethod == null) {
-            return Optional.empty();
-        }
-
-        CrossOrigin corsAnnot;
-        OPTIONS optsAnnot = resourceMethod.getAnnotation(OPTIONS.class);
-        Path pathAnnot = resourceMethod.getAnnotation(Path.class);
-        if (optsAnnot != null) {
-            corsAnnot = resourceMethod.getAnnotation(CrossOrigin.class);
-        } else {
-            Optional<Method> optionsMethod = Arrays.stream(resourceClass.getDeclaredMethods())
-                    .filter(m -> {
-                        OPTIONS optsAnnot2 = m.getAnnotation(OPTIONS.class);
-                        Path pathAnnot2 = m.getAnnotation(Path.class);
-                        if (optsAnnot2 != null) {
-                            if (pathAnnot != null) {
-                                return pathAnnot2 != null && pathAnnot.value()
-                                        .equals(pathAnnot2.value());
-                            }
-                            return pathAnnot2 == null;
-                        }
-                        return false;
-                    })
-                    .findFirst();
-            corsAnnot = optionsMethod.map(m -> m.getAnnotation(CrossOrigin.class))
-                    .orElse(null);
-        }
-        return Optional.ofNullable(corsAnnot == null ? null : annotationToConfig(corsAnnot));
-    }
-
-    private static CrossOriginConfig annotationToConfig(CrossOrigin crossOrigin) {
-        return CrossOriginConfig.builder()
-            .allowOrigins(crossOrigin.value())
-            .allowHeaders(crossOrigin.allowHeaders())
-            .exposeHeaders(crossOrigin.exposeHeaders())
-            .allowMethods(crossOrigin.allowMethods())
-            .allowCredentials(crossOrigin.allowCredentials())
-            .maxAgeSeconds(crossOrigin.maxAge())
-            .build();
-    }
+//    Optional<CrossOriginConfig> crossOriginFromAnnotationSupplier() {
+//
+//        // If not found, inspect resource matched
+//        Method resourceMethod = resourceInfo.getResourceMethod();
+//        Class<?> resourceClass = resourceInfo.getResourceClass();
+//
+//        // Not available if matching failed and error response is returned
+//        if (resourceClass == null || resourceMethod == null) {
+//            return Optional.empty();
+//        }
+//
+//        CrossOrigin corsAnnot;
+//        OPTIONS optsAnnot = resourceMethod.getAnnotation(OPTIONS.class);
+//        Path pathAnnot = resourceMethod.getAnnotation(Path.class);
+//        if (optsAnnot != null) {
+//            corsAnnot = resourceMethod.getAnnotation(CrossOrigin.class);
+//        } else {
+//            Optional<Method> optionsMethod = Arrays.stream(resourceClass.getDeclaredMethods())
+//                    .filter(m -> {
+//                        OPTIONS optsAnnot2 = m.getAnnotation(OPTIONS.class);
+//                        Path pathAnnot2 = m.getAnnotation(Path.class);
+//                        if (optsAnnot2 != null) {
+//                            if (pathAnnot != null) {
+//                                return pathAnnot2 != null && pathAnnot.value()
+//                                        .equals(pathAnnot2.value());
+//                            }
+//                            return pathAnnot2 == null;
+//                        }
+//                        return false;
+//                    })
+//                    .findFirst();
+//            corsAnnot = optionsMethod.map(m -> m.getAnnotation(CrossOrigin.class))
+//                    .orElse(null);
+//        }
+//        return Optional.ofNullable(corsAnnot == null ? null : annotationToConfig(corsAnnot));
+//    }
+//
+//    private static CrossOriginConfig annotationToConfig(CrossOrigin crossOrigin) {
+//        return CrossOriginConfig.builder()
+//            .allowOrigins(crossOrigin.value())
+//            .allowHeaders(crossOrigin.allowHeaders())
+//            .exposeHeaders(crossOrigin.exposeHeaders())
+//            .allowMethods(crossOrigin.allowMethods())
+//            .allowCredentials(crossOrigin.allowCredentials())
+//            .maxAgeSeconds(crossOrigin.maxAge())
+//            .build();
+//    }
 }

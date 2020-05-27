@@ -12,9 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-
 package io.helidon.microprofile.cors;
+
+import io.helidon.microprofile.server.Server;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
@@ -31,12 +37,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Set;
 
-import io.helidon.microprofile.server.Server;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.helidon.common.http.Http.Header.ORIGIN;
 import static io.helidon.webserver.cors.CrossOriginConfig.ACCESS_CONTROL_ALLOW_CREDENTIALS;
@@ -51,10 +55,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-/**
- * Class CrossOriginTest.
- */
-public class CrossOriginTest {
+public class TestPerf {
 
     private static Client client;
     private static Server server;
@@ -85,7 +86,8 @@ public class CrossOriginTest {
 
         @Override
         public Set<Class<?>> getClasses() {
-            return Set.of(CorsResource0.class, CorsResource1.class, CorsResource2.class, CorsResource3.class);
+            return Set.of(CrossOriginTest.CorsResource0.class, CrossOriginTest.CorsResource1.class,
+                    CrossOriginTest.CorsResource2.class, CrossOriginTest.CorsResource3.class);
         }
     }
 
@@ -184,7 +186,6 @@ public class CrossOriginTest {
         }
     }
 
-    @Test
     void test1PreFlightAllowedOrigin() {
         Response res = target.path("/app/cors1")
                 .request()
@@ -198,7 +199,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is("3600"));
     }
 
-    @Test
     void test1PreFlightAllowedHeaders1() {
         Response res = target.path("/app/cors1")
                 .request()
@@ -213,7 +213,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is("3600"));
     }
 
-    @Test
     void test1PreFlightAllowedHeaders2() {
         Response res = target.path("/app/cors1")
                 .request()
@@ -231,7 +230,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is("3600"));
     }
 
-    @Test
     void test2PreFlightForbiddenOrigin() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -241,7 +239,6 @@ public class CrossOriginTest {
         assertThat(res.getStatusInfo(), is(Response.Status.FORBIDDEN));
     }
 
-    @Test
     void test2PreFlightAllowedOrigin() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -256,7 +253,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is(nullValue()));
     }
 
-    @Test
     void test2PreFlightForbiddenMethod() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -266,7 +262,6 @@ public class CrossOriginTest {
         assertThat(res.getStatusInfo(), is(Response.Status.FORBIDDEN));
     }
 
-    @Test
     void test2PreFlightForbiddenHeader() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -277,7 +272,6 @@ public class CrossOriginTest {
         assertThat(res.getStatusInfo(), is(Response.Status.FORBIDDEN));
     }
 
-    @Test
     void test2PreFlightAllowedHeaders1() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -294,7 +288,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is(nullValue()));
     }
 
-    @Test
     void test2PreFlightAllowedHeaders2() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -313,7 +306,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is(nullValue()));
     }
 
-    @Test
     void test2PreFlightAllowedHeaders3() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -333,7 +325,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is(nullValue()));
     }
 
-    @Test
     void test1ActualAllowedOrigin() {
         Response res = target.path("/app/cors1")
                 .request()
@@ -344,7 +335,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_ORIGIN), is("*"));
     }
 
-    @Test
     void test2ActualAllowedOrigin() {
         Response res = target.path("/app/cors2")
                 .request()
@@ -355,7 +345,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_CREDENTIALS), is("true"));
     }
 
-    @Test
     void test3PreFlightAllowedOrigin() {
         Response res = target.path("/app/cors3")
                 .request()
@@ -369,7 +358,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is("3600"));
     }
 
-    @Test
     void test3ActualAllowedOrigin() {
         Response res = target.path("/app/cors3")
                 .request()
@@ -380,7 +368,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_ORIGIN), is("http://foo.bar"));
     }
 
-    @Test
     void testErrorResponse() {
         Response res = target.path("/app/notfound")
                 .request()
@@ -391,7 +378,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().containsKey(ACCESS_CONTROL_ALLOW_ORIGIN), is(false));
     }
 
-    @Test
     void testMainPathInPresenceOfSubpath() {
         Response res = target.path("/app/cors0")
                 .request()
@@ -402,7 +388,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_ORIGIN), is("*"));
     }
 
-    @Test
     void testSubPathPreflightAllowed() {
         Response res = target.path("/app/cors0/subpath")
                 .request()
@@ -416,7 +401,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_MAX_AGE), is("3600"));
     }
 
-    @Test
     void testSubPathActualAllowed() {
         Response res = target.path("/app/cors0/subpath")
                 .request()
@@ -427,7 +411,6 @@ public class CrossOriginTest {
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_ORIGIN), is("http://foo.bar"));
     }
 
-    @Test
     void testSubPathGet() {
         Response res = target.path("/app/cors0/subpath")
                 .request()
@@ -435,5 +418,27 @@ public class CrossOriginTest {
                 .get();
         assertThat(res.getStatusInfo(), is(Response.Status.OK));
         assertThat(res.getHeaders().getFirst(ACCESS_CONTROL_ALLOW_ORIGIN), is("http://there.com"));
+    }
+
+    @Test
+    public void stress() {
+        long start = System.nanoTime();
+        int loopCount = Integer.getInteger("testCount", 1000);
+        for (int i = 0; i < loopCount; i++) {
+            test1ActualAllowedOrigin();
+            test1PreFlightAllowedHeaders1();
+
+            test2ActualAllowedOrigin();;
+            test2PreFlightAllowedHeaders1();
+
+            test3ActualAllowedOrigin();
+            test3PreFlightAllowedOrigin();
+
+            testSubPathActualAllowed();
+            testSubPathPreflightAllowed();
+        }
+        long end = System.nanoTime();
+        Assertions.fail(String.format("Stress results: n = %d, elapsed seconds = %f", loopCount,
+                (end - start) / 1000.0 / 1000.0 / 1000.0));
     }
 }
