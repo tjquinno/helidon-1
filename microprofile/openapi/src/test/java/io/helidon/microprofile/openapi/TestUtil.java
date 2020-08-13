@@ -19,6 +19,8 @@ package io.helidon.microprofile.openapi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.CharBuffer;
@@ -31,6 +33,7 @@ import io.helidon.common.http.MediaType;
 import io.helidon.config.Config;
 import io.helidon.microprofile.server.Server;
 
+import org.eclipse.microprofile.openapi.models.OpenAPI;
 import org.yaml.snakeyaml.Yaml;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -78,7 +81,7 @@ public class TestUtil {
 
     /**
      * Returns a {@code HttpURLConnection} for the requested method and path and
-     * {code @MediaType} from the specified {@link WebServer}.
+     * {code @MediaType} from the specified {@code WebServer}.
      *
      * @param port port to connect to
      * @param method HTTP method to use in building the connection
@@ -170,14 +173,29 @@ public class TestUtil {
      */
     @SuppressWarnings(value = "unchecked")
     public static Map<String, Object> yamlFromResponse(HttpURLConnection cnx) throws IOException {
-        MediaType returnedMediaType = mediaTypeFromResponse(cnx);
+        return toMap(stringYAMLFromResponse(cnx));
+//        MediaType returnedMediaType = mediaTypeFromResponse(cnx);
+//        Yaml yaml = new Yaml();
+//        Charset cs = Charset.defaultCharset();
+//        if (returnedMediaType.charset().isPresent()) {
+//            cs = Charset.forName(returnedMediaType.charset().get());
+//        }
+//        try (InputStream is = cnx.getInputStream(); InputStreamReader isr =  new InputStreamReader(is, cs)) {
+//            return (Map<String, Object>) yaml.load(isr);
+//        }
+    }
+
+    public static OpenAPI toOpenAPI(String yamlText) throws IOException {
         Yaml yaml = new Yaml();
-        Charset cs = Charset.defaultCharset();
-        if (returnedMediaType.charset().isPresent()) {
-            cs = Charset.forName(returnedMediaType.charset().get());
+        try (Reader reader = new StringReader(yamlText)) {
+            return yaml.loadAs(reader, OpenAPI.class);
         }
-        try (InputStream is = cnx.getInputStream(); InputStreamReader isr =  new InputStreamReader(is, cs)) {
-            return (Map<String, Object>) yaml.load(isr);
+    }
+
+    public static Map<String, Object> toMap(String yamlText) throws IOException {
+        Yaml yaml = new Yaml();
+        try (Reader reader = new StringReader(yamlText)) {
+            return yaml.load(reader);
         }
     }
 
