@@ -18,26 +18,15 @@ package io.helidon.microprofile.openapi;
 
 import org.eclipse.microprofile.openapi.annotations.Components;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
-import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.links.Link;
-import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.JsonArrayBuilder;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
@@ -52,61 +41,16 @@ import java.util.Set;
         components = @Components(
                 schemas = {
                         @Schema(name = "Link", title = "Link", type = SchemaType.OBJECT, implementation = Link.class),
-                        @Schema(name = "EnvironmentInfo", type = SchemaType.OBJECT, implementation = NestedRefApp.EnvironmentInfo.class),
+                        @Schema(name = "EnvironmentInfo", type = SchemaType.OBJECT, implementation = EnvironmentInfo.class),
                 }
         )
 )
 public class NestedRefApp extends Application {
 
-    abstract static class Link{
-        protected String rel;
-        protected String href;
-    }
-
-
-    abstract static class Entity {
-        protected List<Link> links = new ArrayList<>();
-        public abstract JsonArrayBuilder createLinksBuilder();
-        public abstract void addLink(UriInfo uriInfo);
-    }
-
-    abstract static class EnvironmentInfo extends Entity {
-        @Schema(required = true,maxLength=80)
-        private String releaseVersion;
-
-        @Schema(required = true,maxLength=80)
-        private String environmentType;
-
-        @Schema(required = true,maxLength=80)
-        private String environmentSize;
-
-        @Schema(required = true,maxLength=80)
-        private boolean breakGlassEnabled;
-    }
 
     @Override
     public Set<Class<?>> getClasses() {
         return Set.of(Resource.class);
-    }
-
-    @Path("/")
-    static class Resource {
-
-        @GET
-        @Operation(operationId = "getEnvironmentInfo",
-                summary = "Environment properties from the monolith like release version, environment type, break glass enabled, etc.",
-                description = "Get Environment Information.")
-        @APIResponse(description = "Environment Info",
-                content = @Content(mediaType = "application/json",
-                        /* schema = @Schema(allOf = GetEnvironmentInfoResponse.class,
-                                implementation = EnvironmentInfo.class))) */
-                        schema = @Schema(name = "GetEnvironmentInfoResponse", ref = "#/components/schemas/EnvironmentInfo")))
-        @Produces(MediaType.APPLICATION_JSON)
-        public EnvironmentInfo getEnvironmentInfo() {
-
-            return null; // Not useful for real, but this allows compilation to succeed.
-
-        }
     }
 
 }
