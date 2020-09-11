@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.helidon.archetypes</groupId>
         <artifactId>helidon-archetypes-project</artifactId>
-        <version>2.0.2-SNAPSHOT</version>
+        <version>2.0.3-SNAPSHOT</version>
     </parent>
     <packaging>helidon-archetype-catalog</packaging>
     <artifactId>helidon-archetype-catalog</artifactId>
@@ -70,7 +70,7 @@
 
     <properties>
         <!-- support command-line overrides -->
-        <cli.build.tools.version>${version.plugin.helidon-build-tools}</cli.build.tools.version>
+        <cli.build.tools.version>${version.helidon-cli}</cli.build.tools.version>
     </properties>
     <build>
         <plugins>
