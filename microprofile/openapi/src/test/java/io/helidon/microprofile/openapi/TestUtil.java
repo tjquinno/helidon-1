@@ -33,7 +33,8 @@ import io.helidon.microprofile.server.Server;
 
 import org.yaml.snakeyaml.Yaml;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Useful utility methods during testing.
@@ -130,8 +131,9 @@ public class TestUtil {
      */
     public static String stringYAMLFromResponse(HttpURLConnection cnx) throws IOException {
         MediaType returnedMediaType = mediaTypeFromResponse(cnx);
-        assertTrue(MediaType.APPLICATION_OPENAPI_YAML.test(returnedMediaType),
-                "Unexpected returned media type");
+        assertThat("Unexpected returned media type",
+                MediaType.APPLICATION_OPENAPI_YAML.test(returnedMediaType),
+                is(true));
         return stringFromResponse(cnx, returnedMediaType);
     }
 
@@ -200,6 +202,9 @@ public class TestUtil {
     public static <T> T fromYaml(Map<String, Object> map, String dottedPath, Class<T> cl) {
         String[] segments = dottedPath.split("\\.");
         for (int i = 0; i < segments.length - 1; i++) {
+            assertThat("Expected YAML path " + dottedPath + " missing from OpenAPI document at segment " + segments[i]
+                    + "; keys at this level: " + map.keySet() + "; map: " + map,
+                    map.containsKey(segments[i]));
             map = (Map<String, Object>) map.get(segments[i]);
         }
         return cl.cast(map.get(segments[segments.length - 1]));

@@ -70,7 +70,7 @@ import io.smallrye.openapi.api.util.MergeUtil;
 import io.smallrye.openapi.runtime.OpenApiProcessor;
 import io.smallrye.openapi.runtime.OpenApiStaticFile;
 import io.smallrye.openapi.runtime.io.OpenApiSerializer;
-import io.smallrye.openapi.runtime.io.OpenApiSerializer.Format;
+import io.smallrye.openapi.runtime.io.Format;
 import io.smallrye.openapi.runtime.scanner.AnnotationScannerExtension;
 import io.smallrye.openapi.runtime.scanner.FilteredIndexView;
 import io.smallrye.openapi.runtime.scanner.OpenApiAnnotationScanner;
@@ -274,7 +274,10 @@ public class OpenAPISupport implements Service {
                 }
                 OpenApiDocument.INSTANCE.filter(OpenApiProcessor.getFilter(config, getContextClassLoader()));
                 OpenApiDocument.INSTANCE.initialize();
-                return OpenApiDocument.INSTANCE.get();
+                OpenAPIImpl instance = OpenAPIImpl.class.cast(OpenApiDocument.INSTANCE.get());
+
+                // Create a copy, primarily to avoid problems during unit testing.
+                return MergeUtil.merge(new OpenAPIImpl(), instance);
             }
         } catch (IOException ex) {
             throw new RuntimeException("Error initializing OpenAPI information", ex);
@@ -294,11 +297,11 @@ public class OpenAPISupport implements Service {
          * Conduct a SmallRye OpenAPI annotation scan for each filtered index view, merging the resulting OpenAPI models into one.
          * The AtomicReference is effectively final so we can update the actual reference from inside the lambda.
          */
-        AtomicReference<OpenAPIImpl> aggregateModelRef = new AtomicReference<>(new OpenAPIImpl()); // Start with skeletal model
+        AtomicReference<OpenAPI> aggregateModelRef = new AtomicReference<>(new OpenAPIImpl()); // Start with skeletal model
         filteredIndexViews.forEach(filteredIndexView -> {
                 OpenApiAnnotationScanner scanner = new OpenApiAnnotationScanner(config, filteredIndexView,
                         List.of(new HelidonAnnotationScannerExtension()));
-                OpenAPIImpl modelForApp = scanner.scan();
+                OpenAPI modelForApp = scanner.scan();
                 aggregateModelRef.set(MergeUtil.merge(aggregateModelRef.get(), modelForApp));
             });
         OpenApiDocument.INSTANCE.modelFromAnnotations(aggregateModelRef.get());
@@ -520,7 +523,7 @@ public class OpenAPISupport implements Service {
             this.fileTypes = new ArrayList<>(Arrays.asList(fileTypes));
         }
 
-        private OpenApiSerializer.Format format() {
+        private Format format() {
             return format;
         }
 

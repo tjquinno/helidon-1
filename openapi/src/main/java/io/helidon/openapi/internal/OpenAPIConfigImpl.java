@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import io.helidon.config.Config;
 
@@ -46,14 +47,13 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
     private final Map<String, Set<String>> operationServers;
     private final Map<String, Set<String>> pathServers;
     private Boolean scanDisable = Boolean.TRUE;
-    private final Set<String> scanPackages = Collections.emptySet();
-    private final Set<String> scanClasses = Collections.emptySet();
-    private final Set<String> scanExcludePackages = Collections.emptySet();
-    private final Set<String> scanExcludeClasses = Collections.emptySet();
+    private final Pattern scanPackages;
+    private final Pattern scanClasses;
+    private final Pattern scanExcludePackages;
+    private final Pattern scanExcludeClasses;
     private final Set<String> servers;
     private final Boolean scanDependenciesDisable = Boolean.TRUE;
     private final Set<String> scanDependenciesJars = Collections.emptySet();
-    private final boolean schemaReferencesEnable;
     private final String customSchemaRegistryClass;
     private final Boolean applicationPathDisable;
 
@@ -64,7 +64,10 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
         pathServers = builder.pathServers;
         servers = new HashSet<>(builder.servers);
         scanDisable = builder.scanDisable;
-        schemaReferencesEnable = builder.schemaReferencesEnable;
+        scanPackages = builder.scanPackages;
+        scanClasses = builder.scanClasses;
+        scanExcludePackages = builder.scanExcludePackages;
+        scanExcludeClasses = builder.scanExcludeClasses;
         customSchemaRegistryClass = builder.customSchemaRegistryClass;
         applicationPathDisable = builder.applicationPathDisable;
     }
@@ -94,22 +97,22 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
     }
 
     @Override
-    public Set<String> scanPackages() {
+    public Pattern scanPackages() {
         return scanPackages;
     }
 
     @Override
-    public Set<String> scanClasses() {
+    public Pattern scanClasses() {
         return scanClasses;
     }
 
     @Override
-    public Set<String> scanExcludePackages() {
+    public Pattern scanExcludePackages() {
         return scanExcludePackages;
     }
 
     @Override
-    public Set<String> scanExcludeClasses() {
+    public Pattern scanExcludeClasses() {
         return scanExcludeClasses;
     }
 
@@ -136,11 +139,6 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
     @Override
     public Set<String> scanDependenciesJars() {
         return scanDependenciesJars;
-    }
-
-    @Override
-    public boolean schemaReferencesEnable() {
-        return schemaReferencesEnable;
     }
 
     @Override
@@ -180,13 +178,14 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
      */
     public static final class Builder implements io.helidon.common.Builder<OpenApiConfig> {
 
+        private static final Pattern MATCH_EVERYTHING = Pattern.compile(".*");
+
         // Key names are inspired by the MP OpenAPI config key names
         static final String MODEL_READER = "model.reader";
         static final String FILTER = "filter";
         static final String SERVERS = "servers";
         static final String SERVERS_PATH = "servers.path";
         static final String SERVERS_OPERATION = "servers.operation";
-        static final String SCHEMA_REFERENCES_ENABLE = "schema-references.enable";
         static final String CUSTOM_SCHEMA_REGISTRY_CLASS = "custom-schema-registry.class";
         static final String APPLICATION_PATH_DISABLE = "application-path.disable";
 
@@ -198,7 +197,11 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
         private final Map<String, Set<String>> pathServers = new HashMap<>();
         private final Set<String> servers = new HashSet<>();
         private boolean scanDisable = true;
-        private boolean schemaReferencesEnable;
+        private Pattern scanPackages = MATCH_EVERYTHING;
+        private Pattern scanClasses = MATCH_EVERYTHING;
+        private Pattern scanExcludePackages = null;
+        private Pattern scanExcludeClasses = null;
+
         private String customSchemaRegistryClass;
         private Boolean applicationPathDisable;
 
@@ -223,7 +226,6 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
             stringFromConfig(config, SERVERS, this::servers);
             listFromConfig(config, SERVERS_PATH, this::pathServers);
             listFromConfig(config, SERVERS_OPERATION, this::operationServers);
-            booleanFromConfig(config, SCHEMA_REFERENCES_ENABLE, this::schemaReferencesEnable);
             stringFromConfig(config, CUSTOM_SCHEMA_REGISTRY_CLASS, this::customSchemaRegistryClass);
             booleanFromConfig(config, APPLICATION_PATH_DISABLE, this::applicationPathDisable);
             return this;
@@ -336,13 +338,46 @@ public class OpenAPIConfigImpl implements OpenApiConfig {
         }
 
         /**
-         * Sets whether schema references are enabled.
+         * Sets the regex pattern for choosing packages to scan.
          *
-         * @param value new setting for schema references enabled
+         * @param pattern regex pattern for packages to scan
          * @return updated builder
          */
-        public Builder schemaReferencesEnable(Boolean value) {
-            schemaReferencesEnable = value;
+        public Builder scanPackages(Pattern pattern) {
+            scanPackages = pattern;
+            return this;
+        }
+
+        /**
+         * Sets the regex pattern for choosing packages to scan.
+         *
+         * @param pattern regex pattern for packages to scan
+         * @return updated builder
+         */
+        public Builder scanClasses(Pattern pattern) {
+            scanClasses = pattern;
+            return this;
+        }
+
+        /**
+         * Sets the regex pattern for choosing packages to exclude from scan.
+         *
+         * @param pattern regex pattern for packages to exclude from scan
+         * @return updated builder
+         */
+        public Builder scanExcludePackages(Pattern pattern) {
+            scanExcludePackages = pattern;
+            return this;
+        }
+
+        /**
+         * Sets the regex pattern for choosing classes to exclude from scan.
+         *
+         * @param pattern regex pattern for classes to exclude from scan
+         * @return updated builder
+         */
+        public Builder scanExcludeClasses(Pattern pattern) {
+            scanExcludeClasses = pattern;
             return this;
         }
 

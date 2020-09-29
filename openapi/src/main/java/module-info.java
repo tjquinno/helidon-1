@@ -27,7 +27,7 @@ module io.helidon.openapi {
 
     requires jandex;
 
-    requires smallrye.open.api;
+    requires smallrye.open.api.core;
     requires java.json;
     requires java.desktop; // for java.beans package
     requires org.yaml.snakeyaml;

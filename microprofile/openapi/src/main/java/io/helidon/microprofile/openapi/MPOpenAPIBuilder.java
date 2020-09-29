@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.enterprise.inject.spi.CDI;
@@ -175,7 +176,7 @@ public final class MPOpenAPIBuilder extends OpenAPISupport.Builder {
          * packages specified in the config with our own inclusions based on this app's classes.
          */
         OpenApiConfigImpl openAPIFilteringConfig = new OpenApiConfigImpl(mpConfig);
-        Set<String> scanClasses = openAPIFilteringConfig.scanClasses();
+        Pattern scanCla¡sses = openAPIFilteringConfig.scanClasses();
         scanClasses.clear();
         openAPIFilteringConfig.scanPackages().clear();
 
