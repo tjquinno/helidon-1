@@ -176,7 +176,7 @@ public final class MPOpenAPIBuilder extends OpenAPISupport.Builder {
          * packages specified in the config with our own inclusions based on this app's classes.
          */
         OpenApiConfigImpl openAPIFilteringConfig = new OpenApiConfigImpl(mpConfig);
-        Pattern scanCla¡sses = openAPIFilteringConfig.scanClasses();
+        Pattern scanClasses = openAPIFilteringConfig.scanClasses();
         scanClasses.clear();
         openAPIFilteringConfig.scanPackages().clear();
 

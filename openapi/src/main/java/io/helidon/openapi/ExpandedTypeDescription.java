@@ -98,8 +98,8 @@ class ExpandedTypeDescription extends TypeDescription {
      */
     ExpandedTypeDescription addRef() {
         PropertySubstitute sub = new PropertySubstitute("$ref", String.class, "getRef", "setRef");
-        sub.setTargetType(impl);
         substituteProperty(sub);
+        sub.setTargetType(impl);
         return this;
     }
 
