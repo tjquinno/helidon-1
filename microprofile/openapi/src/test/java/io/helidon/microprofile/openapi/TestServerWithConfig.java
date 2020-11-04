@@ -16,19 +16,21 @@
  */
 package io.helidon.microprofile.openapi;
 
-import io.helidon.common.http.MediaType;
-import io.helidon.config.ClasspathConfigSource;
-import io.helidon.config.Config;
 import io.helidon.microprofile.server.Server;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import io.helidon.microprofile.tests.junit5.AddConfig;
+import io.helidon.microprofile.tests.junit5.HelidonTest;
 import org.junit.jupiter.api.Test;
 
+import javax.inject.Inject;
+import javax.ws.rs.client.WebTarget;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@HelidonTest
+@AddConfig(key = "openapi.web-context", value="/otheropenapi")
 public class TestServerWithConfig {
 
     private static final String ALTERNATE_OPENAPI_PATH = "/otheropenapi";
@@ -39,29 +41,24 @@ public class TestServerWithConfig {
 
     private static Map<String, Object> yaml;
 
+    @Inject
+    private WebTarget webTarget;
+
     public TestServerWithConfig() {
-    }
-
-    @BeforeAll
-    public static void startServer() throws Exception {
-        Config helidonConfig = Config.builder().addSource(ClasspathConfigSource.create("/serverConfig.yml")).build();
-        server = TestUtil.startServer(helidonConfig, TestApp.class);
-        cnx = TestUtil.getURLConnection(
-                server.port(),
-                "GET",
-                ALTERNATE_OPENAPI_PATH,
-                MediaType.APPLICATION_OPENAPI_YAML);
-        yaml = TestUtil.yamlFromResponse(cnx);
-    }
-
-    @AfterAll
-    public static void stopServer() {
-        TestUtil.cleanup(server, cnx);
     }
 
     @Test
     public void testAlternatePath() throws Exception {
-        String goSummary = TestUtil.fromYaml(yaml, "paths./testapp/go.get.summary", String.class);
+        String goSummary = TestUtil.fromYaml(getYaml(), "paths./testapp/go.get.summary", String.class);
         assertEquals(TestApp.GO_SUMMARY, goSummary);
+    }
+
+    private Map<String, Object> getYaml() throws IOException {
+        if (yaml == null) {
+            synchronized (BasicServerTest.class) {
+                yaml = TestUtil.getYaml(webTarget, ALTERNATE_OPENAPI_PATH);
+            }
+        }
+        return yaml;
     }
 }

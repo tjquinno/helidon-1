@@ -17,100 +17,41 @@
 package io.helidon.microprofile.openapi;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
 
-import javax.ws.rs.core.Application;
+import javax.ws.rs.client.WebTarget;
+
+import javax.ws.rs.core.Response;
 
 import io.helidon.common.http.MediaType;
-import io.helidon.config.Config;
-import io.helidon.microprofile.server.Server;
 
 import org.yaml.snakeyaml.Yaml;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Useful utility methods during testing.
  */
 public class TestUtil {
 
-    /**
-     * Starts the MP server running the specific application.
-     * <p>
-     * The server will use the default MP config.
-     *
-     * @param helidonConfig the Helidon configuration to use in preparing the server
-     * @param appClasses application classes to serve
-     * @return the started MP {@code Server} instance
-     */
-    public static Server startServer(Config helidonConfig, Class<? extends Application>... appClasses) {
-        Server.Builder builder = Server.builder()
-                .port(0)
-                .config(helidonConfig);
-        for (Class<? extends Application> appClass : appClasses) {
-            builder.addApplication(appClass);
-        }
-        return builder
-                .build()
-                .start();
-    }
-
-    /**
-     * Cleans up, stopping the server and disconnecting the connection.
-     *
-     * @param server the {@code Server} to stop
-     * @param cnx the connection to disconnect
-     */
-    public static void cleanup(Server server, HttpURLConnection cnx) {
-        if (cnx != null) {
-            cnx.disconnect();
-        }
-        if (server != null) {
-            server.stop();
-        }
-    }
-
-    /**
-     * Returns a {@code HttpURLConnection} for the requested method and path and
-     * {code @MediaType} from the specified {@link WebServer}.
-     *
-     * @param port port to connect to
-     * @param method HTTP method to use in building the connection
-     * @param path path to the resource in the web server
-     * @param mediaType {@code MediaType} to be Accepted
-     * @return the connection to the server and path
-     * @throws Exception in case of errors creating the connection
-     */
-    public static HttpURLConnection getURLConnection(
-            int port,
-            String method,
-            String path,
-            MediaType mediaType) throws Exception {
-        URL url = new URL("http://localhost:" + port + path);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod(method);
-        if (mediaType != null) {
-            conn.setRequestProperty("Accept", mediaType.toString());
-        }
-        System.out.println("Connecting: " + method + " " + url);
-        return conn;
+    static Map<String, Object> getYaml(WebTarget webTarget, String openApiPath) throws IOException {
+        Response response = webTarget
+                .path(openApiPath)
+                .request()
+                .get();
+        return TestUtil.yamlFromResponse(openApiPath, response);
     }
 
     /**
      * Returns the {@code MediaType} instance conforming to the HTTP response
      * content type.
      *
-     * @param cnx the HttpURLConnection from which to get the content type
+     * @param response the Response from which to get the content type
      * @return the MediaType corresponding to the content type in the response
      */
-    public static MediaType mediaTypeFromResponse(HttpURLConnection cnx) {
-        MediaType returnedMediaType = MediaType.parse(cnx.getContentType());
+    public static MediaType mediaTypeFromResponse(Response response) {
+        MediaType returnedMediaType = MediaType.parse(response.getMediaType().getType());
         if (!returnedMediaType.charset().isPresent()) {
             returnedMediaType = MediaType.builder()
                     .type(returnedMediaType.type())
@@ -122,63 +63,45 @@ public class TestUtil {
     }
 
     /**
-     * Represents the HTTP response payload as a String.
+     * Represents response payload as a String.
      *
-     * @param cnx the HttpURLConnection from which to get the response payload
+     * @param response the response from which to get the response payload
      * @return String representation of the OpenAPI document as a String
      * @throws IOException in case of errors reading the HTTP response payload
      */
-    public static String stringYAMLFromResponse(HttpURLConnection cnx) throws IOException {
-        MediaType returnedMediaType = mediaTypeFromResponse(cnx);
-        assertTrue(MediaType.APPLICATION_OPENAPI_YAML.test(returnedMediaType),
-                "Unexpected returned media type");
-        return stringFromResponse(cnx, returnedMediaType);
+    public static String stringYAMLFromResponse(Response response) throws IOException {
+        MediaType returnedMediaType = mediaTypeFromResponse(response);
+        assertThat("Unexpected returned media type", MediaType.APPLICATION_OPENAPI_YAML.test(returnedMediaType), is(true));
+        return stringFromResponse(response);
     }
 
     /**
      * Returns a {@code String} resulting from interpreting the response payload
      * in the specified connection according to the expected {@code MediaType}.
      *
-     * @param cnx {@code HttpURLConnection} with the response
-     * @param mediaType {@code MediaType} to use in interpreting the response
-     * payload
-     * @return {@code String} of the payload interpreted according to the
-     * specified {@code MediaType}
+     * @param response {@code Response} with the entity to convert
+     * @return {@code String} of the payload
      * @throws IOException in case of errors reading the response payload
      */
-    public static String stringFromResponse(HttpURLConnection cnx, MediaType mediaType) throws IOException {
-        try (final InputStreamReader isr = new InputStreamReader(
-                cnx.getInputStream(), mediaType.charset().get())) {
-            StringBuilder sb = new StringBuilder();
-            CharBuffer cb = CharBuffer.allocate(1024);
-            while (isr.read(cb) != -1) {
-                cb.flip();
-                sb.append(cb);
-            }
-            return sb.toString();
-        }
+    public static String stringFromResponse(Response response) throws IOException {
+        return response.readEntity(String.class);
     }
 
     /**
      * Returns the response payload from the specified connection as a snakeyaml
      * {@code Yaml} object.
      *
-     * @param cnx the {@code HttpURLConnection} containing the response
+     * @param openApiPath path for the endpoint from which to retrieve the OpenAPI document
+     * @param response the {@code Response} containing the entity to process
      * @return the YAML {@code Map<String, Object>} (created by snakeyaml) from
-     * the HTTP response payload
+     * the response payload
      * @throws IOException in case of errors reading the response
      */
     @SuppressWarnings(value = "unchecked")
-    public static Map<String, Object> yamlFromResponse(HttpURLConnection cnx) throws IOException {
-        MediaType returnedMediaType = mediaTypeFromResponse(cnx);
+    public static Map<String, Object> yamlFromResponse(String openApiPath, Response response) throws IOException {
+        assertThat("Error during GET from " + openApiPath, response.getStatus(), is(Response.Status.OK.getStatusCode()));
         Yaml yaml = new Yaml();
-        Charset cs = Charset.defaultCharset();
-        if (returnedMediaType.charset().isPresent()) {
-            cs = Charset.forName(returnedMediaType.charset().get());
-        }
-        try (InputStream is = cnx.getInputStream(); InputStreamReader isr =  new InputStreamReader(is, cs)) {
-            return (Map<String, Object>) yaml.load(isr);
-        }
+        return (Map<String, Object>) yaml.load(stringFromResponse(response));
     }
 
     /**
