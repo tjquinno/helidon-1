@@ -40,6 +40,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessManagedBean;
 
 import io.helidon.config.Config;
 import io.helidon.microprofile.cdi.RuntimeStart;
@@ -72,6 +73,7 @@ public class OpenApiCdiExtension implements Extension {
     private final int indexURLCount;
 
     private final Set<Class<?>> annotatedTypes = new HashSet<>();
+    private final Set<Class<?>> unvetoedAnnotatedTypes = new HashSet<>();
 
     private org.eclipse.microprofile.config.Config mpConfig;
     private Config config;
@@ -138,6 +140,21 @@ public class OpenApiCdiExtension implements Extension {
     }
 
     /**
+     * Records each type that is both annotated and also not vetoed (unless Jandex index(es)
+     * were found on the classpath, in which case we do not build our own index in memory).
+     *
+     * @param pmb {@code ProcessManagedBean} event
+     */
+    private void pruneVetoedTypes(@Observes ProcessManagedBean<?> pmb) {
+        if (indexURLCount == 0) {
+            Class<?> c = pmb.getAnnotatedBeanClass().getJavaClass();
+            if (annotatedTypes.contains(c)) {
+                unvetoedAnnotatedTypes.add(c);
+            }
+        }
+    }
+
+    /**
      * Reports an {@link org.jboss.jandex.IndexView} for the Jandex index that describes
      * annotated classes for endpoints.
      *
@@ -174,7 +191,7 @@ public class OpenApiCdiExtension implements Extension {
 
     private IndexView indexFromHarvestedClasses() throws IOException {
         Indexer indexer = new Indexer();
-        annotatedTypes.forEach(c -> addClassToIndexer(indexer, c));
+        unvetoedAnnotatedTypes.forEach(c -> addClassToIndexer(indexer, c));
 
         /*
          * Some apps might be added dynamically, not via annotation processing. Add those classes to the index if they are not
