@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -60,6 +61,8 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
  * the class path.
  */
 public class OpenApiCdiExtension implements Extension {
+
+    static final String IGNORE_EXTERNAL_INDEXES_PROPERTY_NAME = "io.helidon.openapi.ignore-external-indexes";
 
     private static final String INDEX_PATH = "META-INF/jandex.idx";
 
@@ -198,6 +201,9 @@ public class OpenApiCdiExtension implements Extension {
     }
 
     private List<URL> findIndexFiles(String... indexPaths) throws IOException {
+        if (Boolean.getBoolean(IGNORE_EXTERNAL_INDEXES_PROPERTY_NAME)) {
+            return Collections.emptyList();
+        }
         List<URL> result = new ArrayList<>();
         for (String indexPath : indexPaths) {
             Enumeration<URL> urls = contextClassLoader().getResources(indexPath);

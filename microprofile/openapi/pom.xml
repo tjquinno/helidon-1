@@ -86,6 +86,45 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <!--
+                    Used for checking that vetoed resources are ignored when the Jandex index is being ignored.
+                    (The OpenAPI code we layer on itself correctly ignores vetoed beans; we need to test that our
+                    internal scanning - used when there is no index - does so also.
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.plugin.surefire}</version>
+                <executions>
+                    <execution>
+                        <id>test-vetoed-bean-with-internal-scan</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/TestVetoedResource.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <io.helidon.openapi.ignore-external-indexes>true</io.helidon.openapi.ignore-external-indexes>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!--
+                            Exclude the veto test when we let SmallRye use the Jandex index (the default), because
+                            SmallRye uses the index directly without going through CDI. The addition of the vetoing
+                            CDI extension therefore has no effect on what SmallRye sees.
+                        -->
+                        <id>default-test</id>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/TestVetoedResource.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     
