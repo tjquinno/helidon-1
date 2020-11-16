@@ -18,4 +18,6 @@ module io.helidon.neo4j {
     requires io.helidon.config;
     requires io.helidon.metrics;
     requires io.helidon.webserver;
+
+    requires org.neo4j.driver;
 }
