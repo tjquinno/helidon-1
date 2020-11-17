@@ -69,16 +69,13 @@ public class Neo4JMetricsHelper {
     }
 
     private synchronized Optional<ConnectionPoolMetrics> getConnectionPoolMetrics() {
-        if (!connectionPoolMetrics.isPresent()) {
+        if (connectionPoolMetrics.isEmpty()) {
             // TODO - remove the driver.isPresent check once driver is set using config
-            if (driver.isPresent()) {
-                connectionPoolMetrics = driver
-                        .get()
-                        .metrics()
-                        .connectionPoolMetrics()
-                        .stream()
-                        .findFirst();
-            }
+            driver.ifPresent(value -> connectionPoolMetrics = value
+                    .metrics()
+                    .connectionPoolMetrics()
+                    .stream()
+                    .findFirst());
         }
         return connectionPoolMetrics;
     }
@@ -100,7 +97,7 @@ public class Neo4JMetricsHelper {
                 .notReusable()
                 .build();
         Neo4JGaugeWrapper<Integer> wrapper =
-                new Neo4JGaugeWrapper(() -> getConnectionPoolMetrics().map(fn).orElse(0));
+                new Neo4JGaugeWrapper<>(() -> getConnectionPoolMetrics().map(fn).orElse(0));
         metricRegistry.register(metadata, wrapper);
     }
 
