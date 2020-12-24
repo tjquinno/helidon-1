@@ -36,6 +36,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
@@ -110,7 +111,10 @@ public class GreetResource {
             content = @Content(mediaType = "application/json",
                                schema = @Schema(implementation = GreetingMessage.class)))
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonObject getMessage(@PathParam("name") String name) {
+    @Parameter(name = "name", description = "Not ignored")
+    public JsonObject getMessage(
+            @Parameter(description = "This is ignored")
+            @PathParam("name") String name) {
         return createResponse(name);
     }
 
