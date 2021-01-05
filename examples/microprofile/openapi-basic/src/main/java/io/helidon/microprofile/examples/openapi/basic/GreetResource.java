@@ -111,7 +111,7 @@ public class GreetResource {
             content = @Content(mediaType = "application/json",
                                schema = @Schema(implementation = GreetingMessage.class)))
     @Produces(MediaType.APPLICATION_JSON)
-    @Parameter(name = "name", description = "Not ignored")
+    //@Parameter(name = "name", description = "Not ignored")
     public JsonObject getMessage(
             @Parameter(description = "This is ignored")
             @PathParam("name") String name) {
