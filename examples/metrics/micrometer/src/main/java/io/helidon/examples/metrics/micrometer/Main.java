@@ -25,8 +25,6 @@ import io.helidon.media.jsonp.JsonpSupport;
 import io.helidon.metrics.micrometer.MicrometerSupport;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
-import io.helidon.webserver.cors.CorsSupport;
-import io.helidon.webserver.cors.CrossOriginConfig;
 import io.micrometer.core.instrument.Counter;
 
 /**
