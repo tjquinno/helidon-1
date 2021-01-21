@@ -116,6 +116,10 @@ final class FeatureCatalog {
                     .nativeSupported(false)
                     .flavor(HelidonFlavor.SE)
         );
+        addSe("io.helidon.metrics.micrometer",
+              "Micrometer",
+              "Simple Micrometer Support",
+              "Metrics", "Micrometer");
         addSe("io.helidon.openapi",
               "OpenAPI",
               "Open API support",
@@ -262,6 +266,10 @@ final class FeatureCatalog {
               "Metrics",
               "MicroProfile metrics spec implementation",
               "Metrics");
+        addMp("io.helidon.microprofile.metrics.micrometer",
+              "Micrometer",
+              "Simple Micrometer metrics support",
+              "Metrics", "Micrometer");
         addMp("io.helidon.microprofile.openapi",
               "Open API",
               "MicroProfile Open API spec implementation",
