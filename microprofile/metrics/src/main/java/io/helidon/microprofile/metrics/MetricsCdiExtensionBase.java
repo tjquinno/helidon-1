@@ -16,18 +16,13 @@
  */
 package io.helidon.microprofile.metrics;
 
-import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
-import org.eclipse.microprofile.metrics.annotation.Metric;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -37,7 +32,6 @@ import java.util.logging.Logger;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
-import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedMethod;
@@ -50,6 +44,8 @@ import javax.enterprise.inject.spi.ProcessProducerField;
 import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.inject.Qualifier;
 import javax.interceptor.Interceptor;
+
+import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 
 import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
 import static io.helidon.microprofile.metrics.MetricUtil.registerMetric;
