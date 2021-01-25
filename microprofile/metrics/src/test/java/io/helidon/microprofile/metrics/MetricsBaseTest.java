@@ -42,7 +42,7 @@ public class MetricsBaseTest {
     @SuppressWarnings("unchecked")
     <T extends Metric> T getMetric(Object bean, String name) {
         MetricID metricName = new MetricID(String.format(METRIC_NAME_TEMPLATE,
-                MetricsCdiExtension.getRealClass(bean).getName(),        // CDI proxies
+                MetricUtil.getRealClass(bean).getName(),        // CDI proxies
                 name));
         return (T) getMetricRegistry().getMetrics().get(metricName);
     }

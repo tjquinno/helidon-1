@@ -138,7 +138,7 @@ abstract class InterceptorBase<T extends Metric, A extends Annotation> {
      * @return The class.
      */
     protected <E extends Member & AnnotatedElement> Class<?> getClass(InvocationContext context, E element) {
-        return context.getTarget() != null ? MetricsCdiExtension.getRealClass(context.getTarget()) : element.getDeclaringClass();
+        return context.getTarget() != null ? MetricUtil.getRealClass(context.getTarget()) : element.getDeclaringClass();
     }
 
     private <E extends Member & AnnotatedElement> Object called(InvocationContext context, E element) throws Exception {

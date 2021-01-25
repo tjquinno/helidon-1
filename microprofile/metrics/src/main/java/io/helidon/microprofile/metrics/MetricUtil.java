@@ -191,7 +191,21 @@ public final class MetricUtil {
      */
     public static <E extends Member & AnnotatedElement>
     void registerMetric(E element, Class<?> clazz, Annotation annotation, MatchingType type) {
-        MetricRegistry registry = getMetricRegistry();
+        registerMetric(getMetricRegistry(), element, clazz, annotation, type);
+    }
+
+    /**
+     * Register a metric.
+     *
+     * @param registry the metric registry in which to register the metric
+     * @param element the annotated element
+     * @param clazz the annotated class
+     * @param annotation the annotation to register
+     * @param type the {@link MatchingType} indicating the type of annotated element
+     * @param <E> the annotated element type
+     */
+    public static <E extends Member & AnnotatedElement>
+    void registerMetric(MetricRegistry registry, E element, Class<?> clazz, Annotation annotation, MatchingType type) {
 
         if (annotation instanceof Counted) {
             Counted counted = (Counted) annotation;
@@ -204,7 +218,7 @@ public final class MetricUtil {
                     .withType(MetricType.COUNTER)
                     .withUnit(counted.unit().trim())
                     .reusable(counted.reusable()).build();
-            registry.counter(meta);
+            registry.counter(meta, tags(counted.tags()));
             LOGGER.fine(() -> "### Registered counter " + metricName);
         } else if (annotation instanceof Metered) {
             Metered metered = (Metered) annotation;
@@ -217,7 +231,7 @@ public final class MetricUtil {
                     .withType(MetricType.METERED)
                     .withUnit(metered.unit().trim())
                     .reusable(metered.reusable()).build();
-            registry.meter(meta);
+            registry.meter(meta, tags(metered.tags()));
             LOGGER.fine(() -> "### Registered meter " + metricName);
         } else if (annotation instanceof ConcurrentGauge) {
             ConcurrentGauge concurrentGauge = (ConcurrentGauge) annotation;
@@ -230,7 +244,7 @@ public final class MetricUtil {
                     .withDescription(concurrentGauge.description().trim())
                     .withType(MetricType.METERED)
                     .withUnit(concurrentGauge.unit().trim()).build();
-            registry.concurrentGauge(meta);
+            registry.concurrentGauge(meta, tags(concurrentGauge.tags()));
             LOGGER.fine(() -> "### Registered ConcurrentGauge " + metricName);
         } else if (annotation instanceof Timed) {
             Timed timed = (Timed) annotation;
@@ -243,7 +257,7 @@ public final class MetricUtil {
                     .withType(MetricType.TIMER)
                     .withUnit(timed.unit().trim())
                     .reusable(timed.reusable()).build();
-            registry.timer(meta);
+            registry.timer(meta, tags(timed.tags()));
             LOGGER.fine(() -> "### Registered timer " + metricName);
         } else if (annotation instanceof SimplyTimed) {
             SimplyTimed simplyTimed = (SimplyTimed) annotation;
@@ -256,7 +270,7 @@ public final class MetricUtil {
                     .withType(MetricType.SIMPLE_TIMER)
                     .withUnit(simplyTimed.unit().trim())
                     .reusable(simplyTimed.reusable()).build();
-            registry.timer(meta);
+            registry.simpleTimer(meta, tags(simplyTimed.tags()));
             LOGGER.fine(() -> "### Registered simple timer " + metricName);
         }
     }
@@ -281,6 +295,20 @@ public final class MetricUtil {
             }
         }
         return result.toArray(new Tag[result.size()]);
+    }
+
+    /**
+     * Returns the real class of this object, skipping proxies.
+     *
+     * @param object The object.
+     * @return Its class.
+     */
+    public static Class<?> getRealClass(Object object) {
+        Class<?> result = object.getClass();
+        while (result.isSynthetic()) {
+            result = result.getSuperclass();
+        }
+        return result;
     }
 
     /**
