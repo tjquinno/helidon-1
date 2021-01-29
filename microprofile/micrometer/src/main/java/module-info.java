@@ -29,8 +29,15 @@ module helidon.microprofile.metrics.micrometer {
     requires io.helidon.metrics.micrometer;
     requires io.helidon.webserver;
     requires io.helidon.webserver.cors;
-    requires micrometer.core;
+    requires transitive micrometer.core;
     requires micrometer.registry.prometheus;
     requires java.logging;
     requires io.helidon.microprofile.metrics;
+
+    exports io.helidon.microprofile.metrics.micrometer;
+
+    // this is needed for CDI extensions that use non-public observer methods
+    opens io.helidon.microprofile.metrics.micrometer to weld.core.impl, io.helidon.microprofile.cdi;
+
+    provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.metrics.micrometer.MicrometerMetricsCdiExtension;
 }

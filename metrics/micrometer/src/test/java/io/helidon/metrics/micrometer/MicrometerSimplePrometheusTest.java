@@ -56,7 +56,7 @@ public class MicrometerSimplePrometheusTest {
 
     @BeforeAll
     static void prepAll() {
-        MicrometerSupport.Builder builder = MicrometerSupport.builder()
+        MeterRegistryFactory factory = MeterRegistryFactory.builder()
                 .enrollRegistry(registry, req -> {
                     // If there is no media type, assume text/plain which means, for us, Prometheus.
                     if (req.headers().acceptedTypes().contains(MediaType.TEXT_PLAIN)
@@ -65,7 +65,10 @@ public class MicrometerSimplePrometheusTest {
                     } else {
                         return Optional.empty();
                     }
-                });
+                })
+                .build();
+        MicrometerSupport.Builder builder = MicrometerSupport.builder()
+                .meterRegistryFactorySupplier(factory);
 
         webServer = MicrometerTestUtil.startServer(builder);
     }

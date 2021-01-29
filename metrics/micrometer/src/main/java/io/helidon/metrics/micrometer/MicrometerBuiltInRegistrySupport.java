@@ -51,7 +51,7 @@ abstract class MicrometerBuiltInRegistrySupport {
         }
     }
 
-    static MicrometerBuiltInRegistrySupport create(MicrometerSupport.BuiltInRegistryType type,
+    static MicrometerBuiltInRegistrySupport create(MeterRegistryFactory.BuiltInRegistryType type,
             ConfigValue<Config> node) {
         switch (type) {
             case PROMETHEUS:
@@ -62,7 +62,7 @@ abstract class MicrometerBuiltInRegistrySupport {
         }
     }
 
-    static MicrometerBuiltInRegistrySupport create(MicrometerSupport.BuiltInRegistryType type,
+    static MicrometerBuiltInRegistrySupport create(MeterRegistryFactory.BuiltInRegistryType type,
             MeterRegistryConfig meterRegistryConfig) {
         switch (type) {
             case PROMETHEUS:
@@ -73,7 +73,7 @@ abstract class MicrometerBuiltInRegistrySupport {
         }
     }
 
-    static MicrometerBuiltInRegistrySupport create(MicrometerSupport.BuiltInRegistryType type) {
+    static MicrometerBuiltInRegistrySupport create(MeterRegistryFactory.BuiltInRegistryType type) {
         MeterRegistryConfig meterRegistryConfig;
         switch (type) {
             case PROMETHEUS:
@@ -100,7 +100,7 @@ abstract class MicrometerBuiltInRegistrySupport {
         return registry;
     }
 
-    private static String unrecognizedMessage(MicrometerSupport.BuiltInRegistryType type) {
+    private static String unrecognizedMessage(MeterRegistryFactory.BuiltInRegistryType type) {
         return String.format("Built-in registry type %s recognized but no support found", type.name());
     }
 }

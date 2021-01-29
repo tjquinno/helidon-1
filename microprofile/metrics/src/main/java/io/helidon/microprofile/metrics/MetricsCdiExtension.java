@@ -98,7 +98,8 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 /**
  * MetricsCdiExtension class.
  */
-public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.microprofile.metrics.Metric> {
+public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.microprofile.metrics.Metric, MetricsSupport,
+        MetricsSupport.Builder> {
     private static final Logger LOGGER = Logger.getLogger(MetricsCdiExtension.class.getName());
 
     private static final Set<Class<? extends Annotation>> METRIC_ANNOTATIONS
@@ -139,7 +140,7 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
      * Creates a new extension instance.
      */
     public MetricsCdiExtension() {
-        super(LOGGER, METRIC_ANNOTATIONS, MetricProducer.class);
+        super(LOGGER, METRIC_ANNOTATIONS, MetricProducer.class, (Config config) -> MetricsSupport.create(config), "metrics");
     }
 
     /**
@@ -437,31 +438,20 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
 
     // register metrics with server after security and when
     // application scope is initialized
-    void registerMetrics(@Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
+    @Override
+    protected Routing.Builder registerMetrics(@Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
                          BeanManager bm) {
+        Routing.Builder defaultRouting = super.registerMetrics(adv, bm);
+
         Set<String> vendorMetricsAdded = new HashSet<>();
         Config config = ((Config) ConfigProvider.getConfig()).get("metrics");
-
-        MetricsSupport metricsSupport = MetricsSupport.create(config);
 
         ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
 
         ConfigValue<String> routingNameConfig = config.get("routing").asString();
-        Routing.Builder defaultRouting = server.serverRoutingBuilder();
 
-        Routing.Builder endpointRouting = defaultRouting;
-
-        if (routingNameConfig.isPresent()) {
-            String routingName = routingNameConfig.get();
-            // support for overriding this back to default routing using config
-            if (!"@default".equals(routingName)) {
-                endpointRouting = server.serverNamedRoutingBuilder(routingName);
-            }
-        }
-
-        metricsSupport.configureVendorMetrics(null, defaultRouting);
+        metricsSupport().configureVendorMetrics(null, defaultRouting);
         vendorMetricsAdded.add("@default");
-        metricsSupport.configureEndpoint(endpointRouting);
 
         // now we may have additional sockets we want to add vendor metrics to
         config.get("vendor-metrics-routings")
@@ -469,13 +459,15 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
                 .orElseGet(List::of)
                 .forEach(routeName -> {
                     if (!vendorMetricsAdded.contains(routeName)) {
-                        metricsSupport.configureVendorMetrics(routeName, server.serverNamedRoutingBuilder(routeName));
+                        metricsSupport().configureVendorMetrics(routeName, server.serverNamedRoutingBuilder(routeName));
                         vendorMetricsAdded.add(routeName);
                     }
                 });
 
         // registry factory is available in global
         Contexts.globalContext().register(RegistryFactory.getInstance());
+
+        return defaultRouting;
     }
 
     private static boolean chooseRestEndpointsSetting(Config metricsConfig) {

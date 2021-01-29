@@ -17,19 +17,9 @@
 package io.helidon.metrics.micrometer;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-import io.helidon.common.http.Http;
 import io.helidon.config.Config;
 import io.helidon.metrics.MetricsSupportBase;
 import io.helidon.webserver.Handler;
@@ -38,8 +28,6 @@ import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
-import io.micrometer.core.instrument.config.MeterRegistryConfig;
 
 /**
  * Implements simple Micrometer support.
@@ -49,7 +37,7 @@ import io.micrometer.core.instrument.config.MeterRegistryConfig;
  * data in an HTTP response.
  * </p>
  * <p>Alternatively, developers can enroll any of the built-in registries represented by
- * the {@link BuiltInRegistryType} enum.</p>
+ * the {@link MeterRegistryFactory.BuiltInRegistryType} enum.</p>
  * <p>
  * Having enrolled Micrometer meter registries with {@code MicrometerSupport.Builder} and built the
  * {@code MicrometerSupport} object, developers can invoke the {@link #registry()} method and use the returned {@code
@@ -58,90 +46,18 @@ import io.micrometer.core.instrument.config.MeterRegistryConfig;
  */
 public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, MicrometerSupport.Builder> {
 
-    /**
-     * Config key for specifying built-in registry types to enroll.
-     */
-    public static final String BUILTIN_REGISTRIES_CONFIG_KEY = "builtin-registries";
-
-    /**
-     * Available built-in registry types.
-     */
-    public enum BuiltInRegistryType {
-
-        /**
-         * Prometheus built-in registry type.
-         */
-        PROMETHEUS;
-
-        /**
-         * Describes an unrecognized built-in registry type.
-         */
-        public static class UnrecognizedBuiltInRegistryTypeException extends Exception {
-
-            private final String unrecognizedType;
-
-            /**
-             * Creates a new instance of the exception.
-             *
-             * @param unrecognizedType the unrecognized type
-             */
-            public UnrecognizedBuiltInRegistryTypeException(String unrecognizedType) {
-                super();
-                this.unrecognizedType = unrecognizedType;
-            }
-
-            /**
-             * Returns the unrecognized type.
-             *
-             * @return the unrecognized type
-             */
-            public String unrecognizedType() {
-                return unrecognizedType;
-            }
-
-            @Override
-            public String getMessage() {
-                return "Unrecognized built-in Micrometer registry type: " + unrecognizedType;
-            }
-        }
-
-        static BuiltInRegistryType valueByName(String name) throws UnrecognizedBuiltInRegistryTypeException {
-            try {
-                return valueOf(name.trim()
-                        .toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException e) {
-                throw new UnrecognizedBuiltInRegistryTypeException(name);
-            }
-        }
-    }
-
     static final String DEFAULT_CONTEXT = "/micrometer";
     private static final String SERVICE_NAME = "Micrometer";
-    private static final String NO_MATCHING_REGISTRY_ERROR_MESSAGE = "No registered MeterRegistry matches the request";
 
     private static final Logger LOGGER = Logger.getLogger(MicrometerSupport.class.getName());
 
-    private final CompositeMeterRegistry compositeMeterRegistry;
-
-    private final List<Enrollment> registryEnrollments;
-
-    // for testing
-    private final Map<BuiltInRegistryType, MeterRegistry> builtInRegistryEnrollments = new HashMap<>();
+    private final MeterRegistryFactory meterRegistryFactory;
 
     private MicrometerSupport(Builder builder) {
         super(builder, SERVICE_NAME);
-        compositeMeterRegistry = new CompositeMeterRegistry();
 
-        if (builder.explicitAndBuiltInEnrollments().isEmpty()) {
-            builder.enrollBuiltInRegistry(BuiltInRegistryType.PROMETHEUS);
+        meterRegistryFactory = builder.meterRegistryFactorySupplier.get();
         }
-        registryEnrollments = builder.explicitAndBuiltInEnrollments();
-        builder.builtInRegistriesRequested.forEach((builtInRegistryType, builtInRegistrySupport) -> {
-            MeterRegistry meterRegistry = builtInRegistrySupport.registry();
-            builtInRegistryEnrollments.put(builtInRegistryType, meterRegistry);
-        });
-        registryEnrollments.forEach(e -> compositeMeterRegistry.add(e.meterRegistry()));
-    }
 
     /**
      * Fluid builder for {@code MicrometerSupport}.
@@ -177,7 +93,7 @@ public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, Mic
      * @return the composite registry
      */
     public MeterRegistry registry() {
-        return compositeMeterRegistry;
+        return meterRegistryFactory.getMeterRegistry();
     }
 
     @Override
@@ -185,20 +101,10 @@ public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, Mic
         configureEndpoint(rules);
     }
 
-    // for testing
-    Set<MeterRegistry> registries() {
-        return compositeMeterRegistry.getRegistries();
-    }
-
-    // for testing
-    Map<BuiltInRegistryType, MeterRegistry> enrolledBuiltInRegistries() {
-        return builtInRegistryEnrollments;
-    }
-
     @Override
     protected void postConfigureEndpoint(Routing.Rules rules) {
         rules
-                .any(new MetricsContextHandler(compositeMeterRegistry))
+                .any(new MetricsContextHandler(meterRegistryFactory.getMeterRegistry()))
                 .get(context(), this::getOrOptions)
                 .options(context(), this::getOrOptions);
     }
@@ -209,14 +115,8 @@ public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, Mic
           looking for the first non-empty Optional<Handler> and invoke that handler. If
           none matches then return an error response.
          */
-        registryEnrollments.stream()
-                .map(e -> e.handlerFn().apply(serverRequest))
-                .findFirst()
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .orElse((req, res) -> res
-                        .status(Http.Status.NOT_ACCEPTABLE_406)
-                        .send(NO_MATCHING_REGISTRY_ERROR_MESSAGE))
+        meterRegistryFactory
+                .matchingHandler(serverRequest, serverResponse)
                 .accept(serverRequest, serverResponse);
     }
 
@@ -226,11 +126,7 @@ public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, Mic
     public static class Builder extends MetricsSupportBase.Builder<MicrometerSupport, Builder>
             implements io.helidon.common.Builder<MicrometerSupport> {
 
-        private final List<Enrollment> explicitRegistryEnrollments = new ArrayList<>();
-
-        private final Map<BuiltInRegistryType, MicrometerBuiltInRegistrySupport> builtInRegistriesRequested = new HashMap<>();
-
-        private final List<LogRecord> logRecords = new ArrayList<>();
+        private Supplier<MeterRegistryFactory> meterRegistryFactorySupplier = null;
 
         private Builder() {
             super(DEFAULT_CONTEXT);
@@ -247,153 +143,22 @@ public class MicrometerSupport extends MetricsSupportBase<MicrometerSupport, Mic
 
         @Override
         public MicrometerSupport build() {
+            if (null == meterRegistryFactorySupplier) {
+                meterRegistryFactorySupplier = () -> MeterRegistryFactory.getInstance(
+                        MeterRegistryFactory.builder().config(config()));
+            }
             return new MicrometerSupport(this);
         }
 
         /**
-         * Override default configuration.
-         * <p>
-         * The config items supported vary from one built-in type to the next. See the documentation for the
-         * corresponding {@code MicrometerRegistryConfig} for details.
-         * </p>
+         * Assigns a {@code MeterRegistryFactory}.
          *
-         * @param config configuration instance
+         * @param meterRegistryFactory the MeterRegistry  to use
          * @return updated builder instance
          */
-        public Builder config(Config config) {
-
-            super.config(config);
-            config.get(BUILTIN_REGISTRIES_CONFIG_KEY)
-                    .ifExists(this::enrollBuiltInRegistries);
-
+        public Builder meterRegistryFactorySupplier(MeterRegistryFactory meterRegistryFactory) {
+            this.meterRegistryFactorySupplier = () -> meterRegistryFactory;
             return this;
-        }
-
-        /**
-         * Enrolls a built-in registry type to support.
-         *
-         * @param builtInRegistryType built-in meter registry type to support
-         * @param meterRegistryConfig appropriate {@code MeterRegistryConfig} instance setting up the meter registry
-         * @return updated builder instance
-         */
-        public Builder enrollBuiltInRegistry(BuiltInRegistryType builtInRegistryType, MeterRegistryConfig meterRegistryConfig) {
-            MicrometerBuiltInRegistrySupport builtInRegistrySupport = MicrometerBuiltInRegistrySupport.create(builtInRegistryType,
-                    meterRegistryConfig);
-            builtInRegistriesRequested.put(builtInRegistryType, builtInRegistrySupport);
-            return this;
-        }
-
-        /**
-         * Enrolls a built-in registry type using the default configuration for that type.
-         *
-         * @param builtInRegistryType  built-in meter registry type to support
-         * @return updated builder instance
-         */
-        public Builder enrollBuiltInRegistry(BuiltInRegistryType builtInRegistryType) {
-            MicrometerBuiltInRegistrySupport builtInRegistrySupport =
-                    MicrometerBuiltInRegistrySupport.create(builtInRegistryType);
-            builtInRegistriesRequested.put(builtInRegistryType, builtInRegistrySupport);
-            return this;
-        }
-
-        /**
-         * Records a {@code MetricRegistry} to be managed by {@code MicrometerSupport}, along with the function that returns an
-         * {@code Optional} of a {@code Handler} for processing a given request to the Micrometer endpoint.
-         *
-         * @param meterRegistry the registry to enroll
-         * @param handlerFunction returns {@code Optional<Handler>}; if present, capable of responding to the specified request
-         * @return updated builder instance
-         */
-        public Builder enrollRegistry(MeterRegistry meterRegistry, Function<ServerRequest, Optional<Handler>> handlerFunction) {
-            explicitRegistryEnrollments.add(new Enrollment(meterRegistry, handlerFunction));
-            return this;
-        }
-
-        // For testing
-        List<LogRecord> logRecords() {
-            return logRecords;
-        }
-
-        private List<Enrollment> explicitAndBuiltInEnrollments() {
-            List<Enrollment> result = new ArrayList<>(explicitRegistryEnrollments);
-            builtInRegistriesRequested.forEach((builtInRegistrySupportType, builtInRegistrySupport) -> {
-                        MeterRegistry meterRegistry = builtInRegistrySupport.registry();
-                        result.add(new Enrollment(meterRegistry, builtInRegistrySupport.requestToHandlerFn(meterRegistry)));
-                    });
-            return result;
-        }
-
-        /**
-         * Enrolls built-in registries specified in a {@code Config} object which is expected to be a @{code LIST} with each
-         * element an {@code OBJECT} with at least a {@code type} item.
-         * <p>
-         * Any additional config items can vary from one built-in registry type to the next.
-         * </p>
-         * <p>
-         * If the config specifies one or more unrecognized {@code type}s, the builder ignores them, logs a {@code WARNING}
-         * message reporting them, and continues.
-         * </p>
-         *
-         * @param registriesConfig {@code Config} object for the 1 or more {@code builtin-registries} entries
-         */
-        private void enrollBuiltInRegistries(Config registriesConfig) {
-
-            if (registriesConfig.type() != Config.Type.LIST) {
-                throw new IllegalArgumentException("Expected Micrometer config " + BUILTIN_REGISTRIES_CONFIG_KEY + " as a LIST "
-                        + "but found " + registriesConfig.type().name());
-            }
-
-            Map<BuiltInRegistryType, MicrometerBuiltInRegistrySupport> candidateBuiltInRegistryTypes = new HashMap<>();
-            List<String> unrecognizedTypes = new ArrayList<>();
-
-            for (Config registryConfig : registriesConfig.asNodeList().get()) {
-                String registryType = registryConfig.get("type").asString().get();
-                try {
-                    BuiltInRegistryType type = BuiltInRegistryType.valueByName(registryType);
-
-                    MicrometerBuiltInRegistrySupport builtInRegistrySupport =
-                            MicrometerBuiltInRegistrySupport.create(type, registryConfig.asNode());
-                    if (builtInRegistrySupport != null) {
-                        candidateBuiltInRegistryTypes.put(type, builtInRegistrySupport);
-                    }
-                } catch (BuiltInRegistryType.UnrecognizedBuiltInRegistryTypeException e) {
-                    unrecognizedTypes.add(e.unrecognizedType());
-                    logRecords.add(new LogRecord(Level.WARNING,
-                            String.format("Ignoring unrecognized Micrometer built-in registry type %s", e.unrecognizedType())));
-                }
-            }
-
-            if (!unrecognizedTypes.isEmpty()) {
-                LOGGER.log(Level.WARNING, String.format("Ignoring unrecognized Micrometer built-in registries: %s",
-                        unrecognizedTypes.toString()));
-            }
-
-            // Do not change previous settings if we did not find any valid new built-in registries selected.
-            if (!candidateBuiltInRegistryTypes.isEmpty()) {
-                builtInRegistriesRequested.clear();
-                builtInRegistriesRequested.putAll(candidateBuiltInRegistryTypes);
-                LOGGER.log(Level.FINE,
-                        () -> "Selecting built-in Micrometer registries " + candidateBuiltInRegistryTypes.toString());
-            }
-        }
-    }
-
-    private static class Enrollment {
-
-        private final MeterRegistry meterRegistry;
-        private final Function<ServerRequest, Optional<Handler>> handlerFn;
-
-        private Enrollment(MeterRegistry meterRegistry, Function<ServerRequest, Optional<Handler>> handlerFn) {
-            this.meterRegistry = meterRegistry;
-            this.handlerFn = handlerFn;
-        }
-
-        private MeterRegistry meterRegistry() {
-            return meterRegistry;
-        }
-
-        private Function<ServerRequest, Optional<Handler>> handlerFn() {
-            return handlerFn;
         }
     }
 

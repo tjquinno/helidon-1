@@ -26,9 +26,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Priority;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Initialized;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
@@ -37,6 +41,7 @@ import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessManagedBean;
@@ -45,17 +50,28 @@ import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.inject.Qualifier;
 import javax.interceptor.Interceptor;
 
+import io.helidon.config.Config;
+import io.helidon.config.ConfigValue;
+import io.helidon.metrics.MetricsSupportBase;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
+import io.helidon.microprofile.server.ServerCdiExtension;
+import io.helidon.webserver.Routing;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
 import static io.helidon.microprofile.metrics.MetricUtil.registerMetric;
+import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
  * Abstract superclass of metrics-related CDI extensions.
  *
- * @param <T> Common supertype of all metrics managed by the extension
+ * @param <M> Common supertype of all metrics managed by the extension
+ * @param <T> concrete type of MetricsSupportBase used
+ * @param <B> Builder for the concrete type of MetricsSupportBase
  */
-public abstract class MetricsCdiExtensionBase<T> implements Extension {
+public abstract class MetricsCdiExtensionBase<M,
+        T extends MetricsSupportBase<T, B>,
+        B extends MetricsSupportBase.Builder<T, B>> implements Extension {
     private final Map<Bean<?>, AnnotatedMember<?>> producers = new HashMap<>();
 
     private final Set<Class<?>> annotatedClasses = new HashSet<>();
@@ -64,11 +80,18 @@ public abstract class MetricsCdiExtensionBase<T> implements Extension {
 
     private final Logger logger;
     private final Class<?> ownProducer;
+    private final Function<Config, T> metricsSupportFactory;
+    private final String configPrefix;
 
-    protected MetricsCdiExtensionBase(Logger logger, Set<Class<? extends Annotation>> annotations, Class<?> ownProducer) {
+    private T metricsSupport = null;
+
+    protected MetricsCdiExtensionBase(Logger logger, Set<Class<? extends Annotation>> annotations, Class<?> ownProducer,
+            Function<Config, T> metricsSupportFactory, String configPrefix) {
         this.logger = logger;
         this.annotations = annotations;
         this.ownProducer = ownProducer; // class containing producers provided by this module
+        this.metricsSupportFactory = metricsSupportFactory;
+        this.configPrefix = configPrefix;
     }
 
     protected Set<Class<?>> annotatedClasses() {
@@ -129,7 +152,7 @@ public abstract class MetricsCdiExtensionBase<T> implements Extension {
                     if (lookupResult.getType() != MetricUtil.MatchingType.METHOD
                             || clazz.equals(annotatedMethod.getJavaMember()
                             .getDeclaringClass())) {
-                        registerMetric(annotatedMethod.getJavaMember(), clazz, lookupResult);
+                        register(annotatedMethod.getJavaMember(), clazz, lookupResult);
                     }
                 }
             });
@@ -145,7 +168,7 @@ public abstract class MetricsCdiExtensionBase<T> implements Extension {
                 LookupResult<? extends Annotation> lookupResult
                         = lookupAnnotation(c, annotation, clazz);
                 if (lookupResult != null) {
-                    registerMetric(c, clazz, lookupResult);
+                    register(c, clazz, lookupResult);
                 }
             });
         }
@@ -207,7 +230,7 @@ public abstract class MetricsCdiExtensionBase<T> implements Extension {
      *
      * @param ppf Producer field.
      */
-    protected void recordProducerFields(@Observes ProcessProducerField<? extends T, ?> ppf) {
+    protected void recordProducerFields(@Observes ProcessProducerField<? extends M, ?> ppf) {
         recordProducerMember("recordProducerFields", ppf.getAnnotatedProducerField(), ppf.getBean());
     }
 
@@ -217,12 +240,50 @@ public abstract class MetricsCdiExtensionBase<T> implements Extension {
      *
      * @param ppm Producer method.
      */
-    protected void recordProducerMethods(@Observes ProcessProducerMethod<? extends T, ?> ppm) {
+    protected void recordProducerMethods(@Observes ProcessProducerMethod<? extends M, ?> ppm) {
         recordProducerMember("recordProducerMethods", ppm.getAnnotatedProducerMethod(), ppm.getBean());
     }
 
     protected Map<Bean<?>, AnnotatedMember<?>> producers() {
         return producers;
+    }
+
+    /**
+     * Registers the metrics-related endpoint, after security and as CDI initializes the app scope, returning the default
+     * routing for optional use by the caller.
+     *
+     * @param adv app-scoped initialization event
+     * @param bm BeanManager
+     * @return default routing
+     */
+    protected Routing.Builder registerMetrics(@Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
+            BeanManager bm) {
+        Config config = ((Config) ConfigProvider.getConfig()).get(configPrefix);
+
+        metricsSupport = metricsSupportFactory.apply(config);
+
+        ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
+
+        ConfigValue<String> routingNameConfig = config.get("routing").asString();
+        Routing.Builder defaultRouting = server.serverRoutingBuilder();
+
+        Routing.Builder endpointRouting = defaultRouting;
+
+        if (routingNameConfig.isPresent()) {
+            String routingName = routingNameConfig.get();
+            // support for overriding this back to default routing using config
+            if (!"@default".equals(routingName)) {
+                endpointRouting = server.serverNamedRoutingBuilder(routingName);
+            }
+        }
+
+        metricsSupport.configureEndpoint(endpointRouting);
+
+        return defaultRouting;
+    }
+
+    protected T metricsSupport() {
+        return metricsSupport;
     }
 
     private void recordProducerMember(String logPrefix, AnnotatedMember<?> member, Bean<?> bean) {

@@ -28,14 +28,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
-import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.WithAnnotations;
 
 import io.helidon.metrics.micrometer.MicrometerSupport;
-import io.helidon.microprofile.metrics.MetricUtil;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 import io.helidon.microprofile.metrics.MetricsCdiExtensionBase;
 import io.micrometer.core.annotation.Counted;
@@ -45,16 +42,12 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import org.eclipse.microprofile.metrics.Metadata;
-import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.MetricType;
-import org.eclipse.microprofile.metrics.annotation.SimplyTimed;
 
 
 /**
  * CDI extension for handling Micrometer artifacts.
  */
-public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter> {
+public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter, MicrometerSupport, MicrometerSupport.Builder> {
 
     private static final Logger LOGGER = Logger.getLogger(MicrometerMetricsCdiExtension.class.getName());
 
@@ -64,13 +57,12 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
     private final Set<Class<?>> metricsAnnotatedClasses = new HashSet<>();
     private final Set<Class<?>> metricsAnnotatedClassesProcessed = new HashSet<>();
 
-    private final MicrometerSupport micrometerSupport;
     private final MeterRegistry meterRegistry;
 
     public MicrometerMetricsCdiExtension() {
-        super(LOGGER, Set.of(Counted.class, Timed.class), MeterProducer.class);
-        micrometerSupport = MicrometerSupport.create();
-        meterRegistry = micrometerSupport.registry();
+        super(LOGGER, Set.of(Counted.class, Timed.class), MeterProducer.class, config -> MicrometerSupport.create(config),
+                "micrometer");
+        meterRegistry = MeterRegistryProducer.getMeterRegistry();
     }
 
     @Override
@@ -115,5 +107,17 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
         discovery.addAnnotatedType(InterceptorTimed.class, "InterceptorTimed");
     }
 
-
+    /**
+     * Records Java classes with a metrics annotation somewhere.
+     *
+     * By recording the classes here, we let CDI optimize its invocations of this observer method. Later, when we
+     * observe managed beans (which CDI invokes for all managed beans) where we also have to examine each method and
+     * constructor, we can quickly eliminate from consideration any classes we have not recorded here.
+     *
+     * @param pat ProcessAnnotatedType event
+     */
+    private void recordMetricAnnotatedClass(@Observes
+    @WithAnnotations({Counted.class, Timed.class}) ProcessAnnotatedType<?> pat) {
+        checkAndRecordCandidateMetricClass(pat);
+    }
 }

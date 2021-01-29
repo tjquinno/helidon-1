@@ -56,9 +56,11 @@ public class MicrometerEndpointTests {
     public void testExplicitEndpointWithExplicitBuiltInRegistryViaBuilder() throws ExecutionException, InterruptedException {
         String context = "/bb";
         runTest(context, () -> MicrometerSupport.builder()
-                    .webContext(context)
-                    .enrollBuiltInRegistry(MicrometerSupport.BuiltInRegistryType.PROMETHEUS)
-                    .build());
+                .meterRegistryFactorySupplier(MeterRegistryFactory.builder()
+                        .enrollBuiltInRegistry(MeterRegistryFactory.BuiltInRegistryType.PROMETHEUS)
+                        .build())
+                .webContext(context)
+                .build());
     }
 
     @Test

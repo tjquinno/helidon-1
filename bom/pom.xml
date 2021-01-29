@@ -512,6 +512,11 @@
                 <artifactId>helidon-metrics-micrometer</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.helidon.microprofile.metrics</groupId>
+                <artifactId>helidon-microprofile-metrics-micrometer</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
 
             <!-- health checks -->
             <dependency>

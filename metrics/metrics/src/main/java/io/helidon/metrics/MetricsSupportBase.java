@@ -65,7 +65,7 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
         return context;
     }
 
-    protected abstract static class Builder<T extends MetricsSupportBase<T, B>, B extends Builder<T, B>> implements io.helidon.common.Builder<T> {
+    public abstract static class Builder<T extends MetricsSupportBase<T, B>, B extends Builder<T, B>> implements io.helidon.common.Builder<T> {
 
         private String context;
         private Config config = Config.empty();
@@ -75,6 +75,12 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
             this.context = defaultContext;
         }
 
+        /**
+         * Sets the configuration to be used by this builder.
+         *
+         * @param config the Helidon config instance
+         * @return updated builder instance
+         */
         public B config(Config config) {
             this.config = config;
 
@@ -89,7 +95,12 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
             return me();
         }
 
-        Config config() {
+        /**
+         * Returns the config (if any) assigned for this builder.
+         *
+         * @return the Config
+         */
+        public Config config() {
             return config;
         }
 
