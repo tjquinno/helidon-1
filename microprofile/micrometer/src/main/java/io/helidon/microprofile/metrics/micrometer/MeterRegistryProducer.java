@@ -17,6 +17,8 @@
 package io.helidon.microprofile.metrics.micrometer;
 
 import io.helidon.common.LazyValue;
+import io.helidon.config.Config;
+import io.helidon.metrics.micrometer.MeterRegistryFactory;
 import io.helidon.metrics.micrometer.MicrometerSupport;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -26,18 +28,39 @@ import javax.enterprise.inject.Produces;
 @ApplicationScoped
 final class MeterRegistryProducer {
 
-    private static final LazyValue<MicrometerSupport> MICROMETER_SUPPORT_FACTORY = LazyValue.create(MicrometerSupport::create);
+    /*
+     * Also maintains a lazy refc to the single {@code MicrometerSupport} instance.
+     */
+    private static final LazyValue<MicrometerSupport> MICROMETER_SUPPORT_FACTORY =
+            LazyValue.create(MeterRegistryProducer::createMicrometerSupport);
 
     private MeterRegistryProducer() {
     }
 
     @Produces
     public static MeterRegistry getMeterRegistry() {
-        return MICROMETER_SUPPORT_FACTORY.get()
+        return getMicrometerSupport()
                 .registry();
+    }
+
+    static MicrometerSupport getMicrometerSupport() {
+        return MICROMETER_SUPPORT_FACTORY.get();
     }
 
     static void clear() {
         getMeterRegistry().clear();
+    }
+
+    private static MicrometerSupport createMicrometerSupport() {
+        Config config = Config.create();
+        MeterRegistryFactory factory = MeterRegistryFactory.getInstance(
+                MeterRegistryFactory.builder()
+                    .config(config));
+        MicrometerSupport result = MicrometerSupport.builder()
+                .config(config)
+                .meterRegistryFactorySupplier(factory)
+                .build();
+
+        return result;
     }
 }

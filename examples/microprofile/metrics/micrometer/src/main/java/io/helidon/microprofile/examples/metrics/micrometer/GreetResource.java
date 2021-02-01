@@ -16,8 +16,6 @@
 
 package io.helidon.microprofile.examples.metrics.micrometer;
 
-import io.micrometer.core.annotation.Counted;
-
 import java.util.Collections;
 
 import javax.enterprise.context.RequestScoped;
@@ -33,6 +31,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 
 /**
  * A simple JAX-RS resource to greet you with CORS support.
@@ -66,7 +67,8 @@ public class GreetResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Counted(value = "gets", description = "Counts total number of GETs")
+    @Counted(value = "getCount", description = "Counts total number of GETs")
+    @Timed(value = "getTime", description = "Times all GETs", histogram = true)
     public JsonObject getDefaultMessage() {
         return createResponse("World");
     }
@@ -80,7 +82,8 @@ public class GreetResource {
     @Path("/{name}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Counted(value = "gets", description = "Counts total number of GETs")
+    @Counted(value = "getCount", description = "Counts total number of GETs")
+    @Timed(value = "getTime", description = "Times all GETs", histogram = true)
     public JsonObject getMessage(@PathParam("name") String name) {
         return createResponse(name);
     }

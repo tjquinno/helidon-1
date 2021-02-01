@@ -16,12 +16,10 @@
  */
 package io.helidon.microprofile.metrics.micrometer;
 
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -31,6 +29,9 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.WithAnnotations;
+import javax.enterprise.util.AnnotationLiteral;
+import javax.enterprise.util.Nonbinding;
+import javax.interceptor.InterceptorBinding;
 
 import io.helidon.metrics.micrometer.MicrometerSupport;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
@@ -54,13 +55,11 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
     private static final List<Class<? extends Annotation>> METRIC_ANNOTATIONS
             = Arrays.asList(Counted.class, Timed.class);
 
-    private final Set<Class<?>> metricsAnnotatedClasses = new HashSet<>();
-    private final Set<Class<?>> metricsAnnotatedClassesProcessed = new HashSet<>();
-
     private final MeterRegistry meterRegistry;
 
     public MicrometerMetricsCdiExtension() {
-        super(LOGGER, Set.of(Counted.class, Timed.class), MeterProducer.class, config -> MicrometerSupport.create(config),
+        super(LOGGER, Set.of(Counted.class, Timed.class), MeterProducer.class, config ->
+                        MeterRegistryProducer.getMicrometerSupport(),
                 "micrometer");
         meterRegistry = MeterRegistryProducer.getMeterRegistry();
     }
@@ -103,8 +102,29 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
         discovery.addAnnotatedType(MeterRegistryProducer.class, "MeterRegistryProducer");
         discovery.addAnnotatedType(MeterProducer.class, "MeterProducer");
 
-        discovery.addAnnotatedType(InterceptorCounted.class, "InterceptorCounted");
-        discovery.addAnnotatedType(InterceptorTimed.class, "InterceptorTimed");
+        prepareInterceptor(discovery, Counted.class, InterceptorCounted.class, CountedLiteral.INSTANCE);
+        prepareInterceptor(discovery, Timed.class, InterceptorTimed.class, TimedLiteral.INSTANCE);
+    }
+
+    private static <A extends Annotation, M extends Meter, I extends InterceptorBase<M, A>>
+    void prepareInterceptor(BeforeBeanDiscovery bbd,
+            Class<A> annotationType,
+            Class<I> interceptorClass,
+            AnnotationLiteral<A> literal) {
+
+        /*
+         * The Micrometer annotations do not have @InterceptorBinding. So:
+         * 1. Add @InterceptorBinding to each.
+         * 2. Mark all methods on each annotation as nonbinding; we want the same interceptor type for each usage of the same
+         * meter.
+         * 3. Add the interceptor class to CDI, augmenting it with a literal for the corresponding meter annotation.
+         */
+        bbd.configureInterceptorBinding(annotationType)
+                .add(InterceptorBindingLiteral.INSTANCE)
+                .methods()
+                .forEach(m -> m.add(Nonbinding.Literal.INSTANCE));
+        bbd.addAnnotatedType(interceptorClass, interceptorClass.getSimpleName())
+                .add(literal);
     }
 
     /**
@@ -119,5 +139,77 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
     private void recordMetricAnnotatedClass(@Observes
     @WithAnnotations({Counted.class, Timed.class}) ProcessAnnotatedType<?> pat) {
         checkAndRecordCandidateMetricClass(pat);
+    }
+
+    static final class InterceptorBindingLiteral extends AnnotationLiteral<InterceptorBinding> implements InterceptorBinding {
+
+        static final InterceptorBindingLiteral INSTANCE = new InterceptorBindingLiteral();
+
+        private static final long serialVersionUID = 1L;
+
+    }
+
+    static final class CountedLiteral extends AnnotationLiteral<Counted> implements Counted {
+
+        static final CountedLiteral INSTANCE = new CountedLiteral();
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String value() {
+            return "";
+        }
+
+        @Override
+        public boolean recordFailuresOnly() {
+            return false;
+        }
+
+        @Override
+        public String[] extraTags() {
+            return new String[0];
+        }
+
+        @Override
+        public String description() {
+            return "";
+        }
+    }
+
+    static final class TimedLiteral extends AnnotationLiteral<Timed> implements Timed {
+
+        static final TimedLiteral INSTANCE = new TimedLiteral();
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String value() {
+            return "";
+        }
+
+        @Override
+        public String[] extraTags() {
+            return new String[0];
+        }
+
+        @Override
+        public boolean longTask() {
+            return false;
+        }
+
+        @Override
+        public double[] percentiles() {
+            return new double[0];
+        }
+
+        @Override
+        public boolean histogram() {
+            return false;
+        }
+
+        @Override
+        public String description() {
+            return "";
+        }
     }
 }
