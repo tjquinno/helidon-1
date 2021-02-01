@@ -28,9 +28,8 @@ import javax.interceptor.AroundConstruct;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
-import io.helidon.microprofile.metrics.MetricUtil;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
-import io.helidon.microprofile.metrics.MetricUtil.MatchingType;
+
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -85,8 +84,7 @@ abstract class InterceptorBase<T extends Meter, A extends Annotation> {
      * @return The class.
      */
     protected <E extends Member & AnnotatedElement> Class<?> getClass(InvocationContext context, E element) {
-        return context.getTarget() != null ? getRealClass(context.getTarget()) :
-                element.getDeclaringClass();
+        return context.getTarget() != null ? getRealClass(context.getTarget()) : element.getDeclaringClass();
     }
 
     /**
@@ -174,7 +172,6 @@ abstract class InterceptorBase<T extends Meter, A extends Annotation> {
             LookupResult<A> lookupResult) {
 
         A annot = lookupResult.getAnnotation();
-        MatchingType matchingType = lookupResult.getType();
 
         String[] tags = tagsFunction.apply(annot);
         String meterName = nameFunction.apply(annot);

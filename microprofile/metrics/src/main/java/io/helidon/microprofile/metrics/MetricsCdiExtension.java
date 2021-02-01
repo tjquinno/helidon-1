@@ -439,16 +439,15 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
     // register metrics with server after security and when
     // application scope is initialized
     @Override
-    protected Routing.Builder registerMetrics(@Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
-                         BeanManager bm) {
+    protected Routing.Builder registerMetrics(
+                @Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
+                BeanManager bm) {
         Routing.Builder defaultRouting = super.registerMetrics(adv, bm);
 
         Set<String> vendorMetricsAdded = new HashSet<>();
         Config config = ((Config) ConfigProvider.getConfig()).get("metrics");
 
         ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
-
-        ConfigValue<String> routingNameConfig = config.get("routing").asString();
 
         metricsSupport().configureVendorMetrics(null, defaultRouting);
         vendorMetricsAdded.add("@default");

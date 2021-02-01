@@ -16,14 +16,15 @@
  */
 package io.helidon.microprofile.metrics.micrometer;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.metrics.micrometer.MeterRegistryFactory;
 import io.helidon.metrics.micrometer.MicrometerSupport;
-import io.micrometer.core.instrument.MeterRegistry;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
+import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
 final class MeterRegistryProducer {

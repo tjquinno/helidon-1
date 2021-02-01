@@ -56,10 +56,10 @@ import io.helidon.metrics.MetricsSupportBase;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 import io.helidon.microprofile.server.ServerCdiExtension;
 import io.helidon.webserver.Routing;
+
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
-import static io.helidon.microprofile.metrics.MetricUtil.registerMetric;
 import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
@@ -256,7 +256,8 @@ public abstract class MetricsCdiExtensionBase<M,
      * @param bm BeanManager
      * @return default routing
      */
-    protected Routing.Builder registerMetrics(@Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
+    protected Routing.Builder registerMetrics(
+            @Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
             BeanManager bm) {
         Config config = ((Config) ConfigProvider.getConfig()).get(configPrefix);
 

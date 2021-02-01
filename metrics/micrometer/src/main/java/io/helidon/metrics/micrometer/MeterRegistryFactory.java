@@ -33,6 +33,7 @@ import io.helidon.config.Config;
 import io.helidon.webserver.Handler;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.config.MeterRegistryConfig;
@@ -92,7 +93,7 @@ public final class MeterRegistryFactory {
     private static final String NO_MATCHING_REGISTRY_ERROR_MESSAGE = "No registered MeterRegistry matches the request";
     private static final Logger LOGGER = Logger.getLogger(MeterRegistryFactory.class.getName());
 
-    private static MeterRegistryFactory INSTANCE = create();
+    private static MeterRegistryFactory instance = create();
 
     private final CompositeMeterRegistry compositeMeterRegistry;
     private final List<Enrollment> registryEnrollments;
@@ -125,7 +126,7 @@ public final class MeterRegistryFactory {
      * @return factory singleton
      */
     public static MeterRegistryFactory getInstance() {
-        return INSTANCE;
+        return instance;
     }
 
     /**
@@ -136,8 +137,8 @@ public final class MeterRegistryFactory {
      * @return MeterRegistryFactory using the Builder
      */
     public static MeterRegistryFactory getInstance(Builder builder) {
-        INSTANCE = builder.build();
-        return INSTANCE;
+        instance = builder.build();
+        return instance;
     }
 
     /**
@@ -224,7 +225,7 @@ public final class MeterRegistryFactory {
         }
     }
 
-    public Handler matchingHandler(ServerRequest serverRequest, ServerResponse serverResponse) {
+    Handler matchingHandler(ServerRequest serverRequest, ServerResponse serverResponse) {
         return registryEnrollments.stream()
                 .map(e -> e.handlerFn().apply(serverRequest))
                 .findFirst()
@@ -318,7 +319,8 @@ public final class MeterRegistryFactory {
             List<MeterRegistryFactory.Enrollment> result = new ArrayList<>(explicitRegistryEnrollments);
             builtInRegistriesRequested.forEach((builtInRegistrySupportType, builtInRegistrySupport) -> {
                 MeterRegistry meterRegistry = builtInRegistrySupport.registry();
-                result.add(new MeterRegistryFactory.Enrollment(meterRegistry, builtInRegistrySupport.requestToHandlerFn(meterRegistry)));
+                result.add(new MeterRegistryFactory.Enrollment(meterRegistry,
+                        builtInRegistrySupport.requestToHandlerFn(meterRegistry)));
             });
             return result;
         }
@@ -343,13 +345,15 @@ public final class MeterRegistryFactory {
                         + "but found " + registriesConfig.type().name());
             }
 
-            Map<MeterRegistryFactory.BuiltInRegistryType, MicrometerBuiltInRegistrySupport> candidateBuiltInRegistryTypes = new HashMap<>();
+            Map<MeterRegistryFactory.BuiltInRegistryType, MicrometerBuiltInRegistrySupport> candidateBuiltInRegistryTypes =
+                    new HashMap<>();
             List<String> unrecognizedTypes = new ArrayList<>();
 
             for (Config registryConfig : registriesConfig.asNodeList().get()) {
                 String registryType = registryConfig.get("type").asString().get();
                 try {
-                    MeterRegistryFactory.BuiltInRegistryType type = MeterRegistryFactory.BuiltInRegistryType.valueByName(registryType);
+                    MeterRegistryFactory.BuiltInRegistryType type =
+                            MeterRegistryFactory.BuiltInRegistryType.valueByName(registryType);
 
                     MicrometerBuiltInRegistrySupport builtInRegistrySupport =
                             MicrometerBuiltInRegistrySupport.create(type, registryConfig.asNode());

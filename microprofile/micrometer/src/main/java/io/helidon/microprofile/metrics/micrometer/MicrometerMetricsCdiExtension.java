@@ -36,6 +36,7 @@ import javax.interceptor.InterceptorBinding;
 import io.helidon.metrics.micrometer.MicrometerSupport;
 import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 import io.helidon.microprofile.metrics.MetricsCdiExtensionBase;
+
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.Counter;
@@ -57,6 +58,9 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
 
     private final MeterRegistry meterRegistry;
 
+    /**
+     * Creates new extension instance.
+     */
     public MicrometerMetricsCdiExtension() {
         super(LOGGER, Set.of(Counted.class, Timed.class), MeterProducer.class, config ->
                         MeterRegistryProducer.getMicrometerSupport(),
@@ -70,19 +74,18 @@ public class MicrometerMetricsCdiExtension extends MetricsCdiExtensionBase<Meter
         Annotation annotation = lookupResult.getAnnotation();
 
         if (annotation instanceof Counted) {
-            Counter counter = MeterProducer.produceCounter(meterRegistry,(Counted) annotation);
+            Counter counter = MeterProducer.produceCounter(meterRegistry, (Counted) annotation);
             LOGGER.log(Level.FINE, () -> "Registered counter " + counter.getId().toString());
         } else if (annotation instanceof Timed) {
-            Timer timer = MeterProducer.produceTimer(meterRegistry, (Timed) annotation);
-            if (timer != null) {
-                LOGGER.log(Level.FINE, () -> "Registered timer " + timer.getId()
+            Timed timed = (Timed) annotation;
+            if (timed.longTask()) {
+                LongTaskTimer longTaskTimer = MeterProducer.produceLongTaskTimer(meterRegistry, timed);
+                LOGGER.log(Level.FINE, () -> "Registered long task timer " + longTaskTimer.getId()
                         .toString());
             } else {
-                LongTaskTimer longTaskTimer = MeterProducer.produceLongTaskTimer(meterRegistry, (Timed) annotation);
-                if (longTaskTimer != null) {
-                    LOGGER.log(Level.FINE, () -> "Registered long task timer " + longTaskTimer.getId()
-                            .toString());
-                }
+                Timer timer = MeterProducer.produceTimer(meterRegistry, timed);
+                LOGGER.log(Level.FINE, () -> "Registered timer " + timer.getId()
+                        .toString());
             }
         }
     }

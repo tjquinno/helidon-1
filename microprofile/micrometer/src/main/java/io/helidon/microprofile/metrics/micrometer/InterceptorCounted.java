@@ -16,14 +16,14 @@
  */
 package io.helidon.microprofile.metrics.micrometer;
 
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
+
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 @Interceptor
 @Priority(Interceptor.Priority.PLATFORM_BEFORE + 8)
