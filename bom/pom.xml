@@ -508,13 +508,8 @@
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.helidon.metrics</groupId>
-                <artifactId>helidon-metrics-micrometer</artifactId>
-                <version>${helidon.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.helidon.microprofile.metrics</groupId>
-                <artifactId>helidon-microprofile-metrics-micrometer</artifactId>
+                <groupId>io.helidon.integrations</groupId>
+                <artifactId>helidon-micrometer</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
 

@@ -17,9 +17,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 = Micrometer Metrics
-:description: Helidon Micrometer metrics
-:keywords: micrometer, helidon, metrics
-:javadoc-base-url-api: {javadoc-base-url}io.helidon.metrics/io/helidon/metrics
+:description: Helidon Micrometer integration
+:keywords: micrometer, helidon, metrics, integration
+:javadoc-base-url-api: {javadoc-base-url}io.helidon.integrations.micrometer/io/helidon/integrations/micrometer
 :h1Prefix: SE
 
 Helidon {h1Prefix} simplifies how you can use Micrometer for application-specific metrics:
@@ -39,8 +39,8 @@ Declare the following dependency in your project:
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>io.helidon.metrics</groupId>
-    <artifactId>helidon-metrics-micrometer</artifactId>
+    <groupId>io.helidon.integrations</groupId>
+    <artifactId>helidon-micrometer</artifactId>
 </dependency>
 ----
 
@@ -60,7 +60,7 @@ and update meters.
 [source,java]
 .Initialize Micrometer support
 ----
-import io.helidon.metrics.micrometer.MicrometerSupport;
+import io.helidon.integrations.micrometer.MicrometerSupport;
 //...
 MicrometerSupport micrometerSupport = MicrometerSupport.create(); // 1
 
