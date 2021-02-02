@@ -58,7 +58,7 @@ import io.micrometer.core.instrument.config.MeterRegistryConfig;
  *             are independent of the singleton created by {@code getInstance()} or {@code getInstance(Builder)}.
  *         </li>
  *     </ol>
- * </p>
+ *
  * <h2>Adding developer-requested registries</h2>
  * <p>
  *     In Micrometer, different registries report their contents in different formats. Further, there is no common abstract
@@ -71,7 +71,8 @@ import io.micrometer.core.instrument.config.MeterRegistryConfig;
  * </p>
  * <p>
  *     To allow us to do this, when our code or developer's enrolls a registry, it also passes a function that accepts a
- *     {@link ServerRequest} and returns an {@link Optional<Handler>}. The function is expected to inspect the request, and if
+ *     {@code ServerRequest} and returns an {@code Optional<Handler>}. The function is expected to inspect the request,
+ *     and if
  *     it wants to process that request (which means, if <em>that</em> registry should be used to respond to that request),
  *     it returns an {@code Optional.of} a {@link Handler}. The handler uses the registry-specific mechanism for retrieving
  *     formatted meter and metrics information and sets and returns the HTTP response. If the function decides that its
