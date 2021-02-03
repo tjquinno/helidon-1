@@ -17,8 +17,8 @@
 /**
  * Example application showing Micrometer support in Helidon SE
  * <p>
- * Start with {@link io.helidon.examples.metrics.micrometer.se.Main} class.
+ * Start with {@link io.helidon.examples.micrometer.se.Main} class.
  *
- * @see io.helidon.examples.metrics.micrometer.se.Main
+ * @see io.helidon.examples.micrometer.se.Main
  */
-package io.helidon.examples.metrics.micrometer.se;
+package io.helidon.examples.micrometer.se;

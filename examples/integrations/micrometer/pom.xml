@@ -25,7 +25,7 @@
         <version>2.2.1-SNAPSHOT</version>
         <relativePath>../../applications/se/pom.xml</relativePath>
     </parent>
-    <groupId>io.helidon.examples</groupId>
+    <groupId>io.helidon.examples.integrations</groupId>
     <artifactId>helidon-examples-micrometer</artifactId>
     <name>Helidon Micrometer Examples</name>
 
@@ -38,10 +38,5 @@
     <description>
         Basic illustrations of Micrometer integration in Helidon
     </description>
-
-    <properties>
-        <mainClass>io.helidon.examples.micrometer.Main</mainClass>
-    </properties>
-
 
 </project>

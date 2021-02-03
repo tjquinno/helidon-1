@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.examples.metrics.micrometer.se;
+package io.helidon.examples.micrometer.se;
 
 import java.io.IOException;
 
