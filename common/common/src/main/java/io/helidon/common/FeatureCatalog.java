@@ -108,7 +108,7 @@ final class FeatureCatalog {
               "Metrics",
               "Metrics support",
               "Metrics");
-        addSe("io.helidon.metrics.micrometer",
+        add("io.helidon.integrations.micrometer",
                 "Micrometer",
                 "Simple Micrometer Support",
                 "Micrometer");
@@ -266,10 +266,6 @@ final class FeatureCatalog {
               "Metrics",
               "MicroProfile metrics spec implementation",
               "Metrics");
-        addMp("io.helidon.microprofile.metrics.micrometer",
-                "Micrometer",
-                "MicroProfile Micrometer support",
-                "Micrometer");
         addMp("io.helidon.microprofile.openapi",
               "Open API",
               "MicroProfile Open API spec implementation",
