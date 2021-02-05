@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.helidon.common.servicesupport.cdi.LookupResult;
 import io.helidon.grpc.metrics.GrpcMetrics;
 import io.helidon.grpc.server.ServiceDescriptor;
 import io.helidon.microprofile.grpc.core.AnnotatedMethod;
@@ -118,7 +119,7 @@ public class MetricsConfigurer
                                                        grpcMethodName));
 
             MetricUtil.LookupResult<? extends Annotation> lookupResult
-                    = MetricUtil.lookupAnnotation(method, annotation.annotationType(), annotatedClass);
+                    = LookupResult.lookupAnnotation(method, annotation.annotationType(), annotatedClass);
 
             if (annotation instanceof Metered) {
                 Metered metered = (Metered) annotation;

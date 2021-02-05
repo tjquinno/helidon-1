@@ -21,6 +21,7 @@ module io.helidon.metrics.micrometer {
     requires java.logging;
 
     requires io.helidon.common;
+    requires io.helidon.config;
     requires io.helidon.webserver.cors;
 
     requires transitive microprofile.metrics.api;

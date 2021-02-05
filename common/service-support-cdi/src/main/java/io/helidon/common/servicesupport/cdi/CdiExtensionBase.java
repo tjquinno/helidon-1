@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package io.helidon.microprofile.metrics;
+package io.helidon.common.servicesupport.cdi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -50,28 +50,27 @@ import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.inject.Qualifier;
 import javax.interceptor.Interceptor;
 
+import io.helidon.common.servicesupport.ServiceSupportBase;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigValue;
-import io.helidon.metrics.MetricsSupportBase;
-import io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 import io.helidon.microprofile.server.ServerCdiExtension;
 import io.helidon.webserver.Routing;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
+import static io.helidon.common.servicesupport.cdi.LookupResult.lookupAnnotation;
 import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
- * Abstract superclass of metrics-related CDI extensions.
+ * Abstract superclass of service-specific CDI extensions.
  *
- * @param <M> Common supertype of all metrics managed by the extension
- * @param <T> concrete type of MetricsSupportBase used
- * @param <B> Builder for the concrete type of MetricsSupportBase
+ * @param <M> Common supertype of all classes (e.g., metrics) whose annotations are managed by the extension
+ * @param <T> concrete type of {@code ServiceSupportBase} used
+ * @param <B> Builder for the concrete type of {@code }ServiceSupportBase}
  */
-public abstract class MetricsCdiExtensionBase<M,
-        T extends MetricsSupportBase<T, B>,
-        B extends MetricsSupportBase.Builder<T, B>> implements Extension {
+public abstract class CdiExtensionBase<M,
+        T extends ServiceSupportBase<T, B>,
+        B extends ServiceSupportBase.Builder<T, B>> implements Extension {
     private final Map<Bean<?>, AnnotatedMember<?>> producers = new HashMap<>();
 
     private final Set<Class<?>> annotatedClasses = new HashSet<>();
@@ -80,18 +79,32 @@ public abstract class MetricsCdiExtensionBase<M,
 
     private final Logger logger;
     private final Class<?> ownProducer;
-    private final Function<Config, T> metricsSupportFactory;
+    private final Function<Config, T> serviceSupportFactory;
     private final String configPrefix;
 
-    private T metricsSupport = null;
+    private T serviceSupport = null;
 
-    protected MetricsCdiExtensionBase(Logger logger, Set<Class<? extends Annotation>> annotations, Class<?> ownProducer,
-            Function<Config, T> metricsSupportFactory, String configPrefix) {
+    protected CdiExtensionBase(Logger logger, Set<Class<? extends Annotation>> annotations, Class<?> ownProducer,
+            Function<Config, T> serviceSupportFactory, String configPrefix) {
         this.logger = logger;
         this.annotations = annotations;
         this.ownProducer = ownProducer; // class containing producers provided by this module
-        this.metricsSupportFactory = metricsSupportFactory;
+        this.serviceSupportFactory = serviceSupportFactory;
         this.configPrefix = configPrefix;
+    }
+
+    /**
+     * Returns the real class of this object, skipping proxies.
+     *
+     * @param object The object.
+     * @return Its class.
+     */
+    public static Class<?> getRealClass(Object object) {
+        Class<?> result = object.getClass();
+        while (result.isSynthetic()) {
+            result = result.getSuperclass();
+        }
+        return result;
     }
 
     protected Set<Class<?>> annotatedClasses() {
@@ -108,7 +121,7 @@ public abstract class MetricsCdiExtensionBase<M,
             annotatedClassesIgnored.removeAll(annotatedClassesProcessed());
             if (!annotatedClassesIgnored.isEmpty()) {
                 logger.log(Level.FINE, () ->
-                        "Classes originally found with metrics annotations that were not processed, probably "
+                        "Classes originally found with selected annotations that were not processed, probably "
                                 + "because they were vetoed:" + annotatedClassesIgnored.toString());
             }
         }
@@ -118,11 +131,11 @@ public abstract class MetricsCdiExtensionBase<M,
 
     /**
      * Observes all beans but immediately dismisses ones for which the Java class was not previously noted
-     * during {@code ProcessAnnotatedType} (which recorded only classes with metrics annotations).
+     * by the {@code ProcessAnnotatedType} observer (which recorded only classes with selected annotations).
      *
      * @param pmb event describing the managed bean being processed
      */
-    protected void registerMetrics(@Observes ProcessManagedBean<?> pmb) {
+    protected void registerObjects(@Observes ProcessManagedBean<?> pmb) {
         AnnotatedType<?> type =  pmb.getAnnotatedBeanClass();
         Class<?> clazz = type.getJavaClass();
         if (!annotatedClasses.contains(clazz)) {
@@ -130,7 +143,7 @@ public abstract class MetricsCdiExtensionBase<M,
         }
         // Recheck for Interceptor.
         if (type.isAnnotationPresent(Interceptor.class)) {
-            logger.log(Level.FINE, "Ignoring metrics defined on type " + clazz.getName()
+            logger.log(Level.FINE, "Ignoring objects defined on type " + clazz.getName()
                     + " because a CDI portable extension added @Interceptor to it dynamically");
             return;
         }
@@ -144,12 +157,12 @@ public abstract class MetricsCdiExtensionBase<M,
                 continue;
             }
             annotations.forEach(annotation -> {
-                for (LookupResult<? extends Annotation> lookupResult : MetricUtil.lookupAnnotations(
+                for (LookupResult<? extends Annotation> lookupResult : LookupResult.lookupAnnotations(
                         type, annotatedMethod, annotation)) {
-                    // For methods, register the metric only on the declaring
+                    // For methods, register the object only on the declaring
                     // class, not subclasses per the MP Metrics 2.0 TCK
                     // VisibilityTimedMethodBeanTest.
-                    if (lookupResult.getType() != MetricUtil.MatchingType.METHOD
+                    if (lookupResult.getType() != MatchingType.METHOD
                             || clazz.equals(annotatedMethod.getJavaMember()
                             .getDeclaringClass())) {
                         register(annotatedMethod.getJavaMember(), clazz, lookupResult);
@@ -175,7 +188,12 @@ public abstract class MetricsCdiExtensionBase<M,
     }
 
     /**
-     * Registers a metric based on an annotation site.
+     * Registers an object based on an annotation site.
+     * <p>
+     *     The meaning of "register" varies among the concrete implementations. At this point, this base implementation has
+     *     managed the annotation processing in a general way (e.g., only non-vetoed beans survive) and now delegates to the
+     *     concrete implementations to actually respond appropriately to the annotation site.
+     * </p>
      *
      * @param element the Element hosting the annotation
      * @param clazz the class on which the hosting Element appears
@@ -191,7 +209,7 @@ public abstract class MetricsCdiExtensionBase<M,
      * @param pat {@code ProcessAnnotatedType} event
      * @return true if the annotated type should be kept for potential processing later; false otherwise
      */
-    protected boolean checkCandidateMetricClass(ProcessAnnotatedType<?> pat) {
+    protected boolean checkCandidateClass(ProcessAnnotatedType<?> pat) {
         AnnotatedType<?> annotatedType = pat.getAnnotatedType();
         Class<?> clazz = annotatedType.getJavaClass();
 
@@ -215,8 +233,8 @@ public abstract class MetricsCdiExtensionBase<M,
      * @param pat {@code ProcessAnnotatedType} event
      * @return true if the annotated type should be kept for potential processing later; false otherwise
      */
-    protected boolean checkAndRecordCandidateMetricClass(ProcessAnnotatedType<?> pat) {
-        boolean result = checkCandidateMetricClass(pat);
+    protected boolean checkAndRecordCandidateClass(ProcessAnnotatedType<?> pat) {
+        boolean result = checkCandidateClass(pat);
         if (result) {
             annotatedClasses.add(pat.getAnnotatedType().getJavaClass());
         }
@@ -225,7 +243,7 @@ public abstract class MetricsCdiExtensionBase<M,
 
 
     /**
-     * Records metric producer fields defined by the application. Ignores producers
+     * Records producer fields defined by the application. Ignores producers
      * with non-default qualifiers and library producers.
      *
      * @param ppf Producer field.
@@ -235,7 +253,7 @@ public abstract class MetricsCdiExtensionBase<M,
     }
 
     /**
-     * Records metric producer methods defined by the application. Ignores producers
+     * Records producer methods defined by the application. Ignores producers
      * with non-default qualifiers and library producers.
      *
      * @param ppm Producer method.
@@ -249,19 +267,19 @@ public abstract class MetricsCdiExtensionBase<M,
     }
 
     /**
-     * Registers the metrics-related endpoint, after security and as CDI initializes the app scope, returning the default
+     * Registers the service-related endpoint, after security and as CDI initializes the app scope, returning the default
      * routing for optional use by the caller.
      *
      * @param adv app-scoped initialization event
      * @param bm BeanManager
      * @return default routing
      */
-    protected Routing.Builder registerMetrics(
+    protected Routing.Builder registerService(
             @Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
             BeanManager bm) {
         Config config = ((Config) ConfigProvider.getConfig()).get(configPrefix);
 
-        metricsSupport = metricsSupportFactory.apply(config);
+        serviceSupport = serviceSupportFactory.apply(config);
 
         ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
 
@@ -278,13 +296,13 @@ public abstract class MetricsCdiExtensionBase<M,
             }
         }
 
-        metricsSupport.configureEndpoint(endpointRouting);
+        serviceSupport.configureEndpoint(endpointRouting);
 
         return defaultRouting;
     }
 
-    protected T metricsSupport() {
-        return metricsSupport;
+    protected T serviceSupport() {
+        return serviceSupport;
     }
 
     private void recordProducerMember(String logPrefix, AnnotatedMember<?> member, Bean<?> bean) {

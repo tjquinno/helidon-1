@@ -63,6 +63,9 @@ import javax.ws.rs.PUT;
 
 import io.helidon.common.Errors;
 import io.helidon.common.context.Contexts;
+import io.helidon.common.servicesupport.cdi.CdiExtensionBase;
+import io.helidon.common.servicesupport.cdi.LookupResult;
+import io.helidon.common.servicesupport.cdi.MatchingType;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigValue;
 import io.helidon.metrics.MetricsSupport;
@@ -91,14 +94,13 @@ import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.metrics.annotation.SimplyTimed;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
-import static io.helidon.microprofile.metrics.MetricUtil.LookupResult;
 import static io.helidon.microprofile.metrics.MetricUtil.getMetricName;
 import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
  * MetricsCdiExtension class.
  */
-public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.microprofile.metrics.Metric, MetricsSupport,
+public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofile.metrics.Metric, MetricsSupport,
         MetricsSupport.Builder> {
     private static final Logger LOGGER = Logger.getLogger(MetricsCdiExtension.class.getName());
 
@@ -241,7 +243,7 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
     private void recordMetricAnnotatedClass(@Observes
     @WithAnnotations({Counted.class, Metered.class, Timed.class, ConcurrentGauge.class,
             SimplyTimed.class}) ProcessAnnotatedType<?> pat) {
-        checkAndRecordCandidateMetricClass(pat);
+        checkAndRecordCandidateClass(pat);
     }
 
     private void processInjectionPoints(@Observes ProcessInjectionPoint<?, ?> pip) {
@@ -265,7 +267,7 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
 
         /// Ignore abstract classes or interceptors. Make sure synthetic SimpleTimer creation is enabled, and if so record the
         // class and JAX-RS methods to use in later bean processing.
-        if (!checkCandidateMetricClass(pat)
+        if (!checkCandidateClass(pat)
                 || !restEndpointsMetricEnabledFromConfig()) {
             return;
         }
@@ -378,7 +380,7 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
             if (metric != null) {
                 String metricName = getMetricName(new AnnotatedElementWrapper(entry.getValue()),
                                                   entry.getValue().getDeclaringType().getJavaClass(),
-                                                  MetricUtil.MatchingType.METHOD,
+                                                  MatchingType.METHOD,
                                                   metric.name(), metric.absolute());
                 T instance = getReference(bm, entry.getValue().getBaseType(), entry.getKey());
                 Metadata md = Metadata.builder()
@@ -439,17 +441,17 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
     // register metrics with server after security and when
     // application scope is initialized
     @Override
-    protected Routing.Builder registerMetrics(
+    protected Routing.Builder registerService(
                 @Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
                 BeanManager bm) {
-        Routing.Builder defaultRouting = super.registerMetrics(adv, bm);
+        Routing.Builder defaultRouting = super.registerService(adv, bm);
 
         Set<String> vendorMetricsAdded = new HashSet<>();
         Config config = ((Config) ConfigProvider.getConfig()).get("metrics");
 
         ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
 
-        metricsSupport().configureVendorMetrics(null, defaultRouting);
+        serviceSupport().configureVendorMetrics(null, defaultRouting);
         vendorMetricsAdded.add("@default");
 
         // now we may have additional sockets we want to add vendor metrics to
@@ -458,7 +460,7 @@ public class MetricsCdiExtension extends MetricsCdiExtensionBase<org.eclipse.mic
                 .orElseGet(List::of)
                 .forEach(routeName -> {
                     if (!vendorMetricsAdded.contains(routeName)) {
-                        metricsSupport().configureVendorMetrics(routeName, server.serverNamedRoutingBuilder(routeName));
+                        serviceSupport().configureVendorMetrics(routeName, server.serverNamedRoutingBuilder(routeName));
                         vendorMetricsAdded.add(routeName);
                     }
                 });

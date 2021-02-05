@@ -189,6 +189,7 @@ public final class MeterRegistryFactory {
          */
         public static class UnrecognizedBuiltInRegistryTypeException extends Exception {
 
+            private static final long serialVersionUID = 9079876961827144352L;
             private final String unrecognizedType;
 
             /**

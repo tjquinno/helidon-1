@@ -1,5 +1,7 @@
+import io.helidon.integrations.micrometer.MicrometerCdiExtension;
+
 /*
- * Copyright (c) 2018, 2021 Oracle and/or its affiliates.
+ * Copyright (c) 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,34 +14,39 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
+module io.helidon.integrations.micrometer {
 
-/**
- * Microprofile metrics implementation.
- */
-module io.helidon.microprofile.metrics {
     requires java.logging;
 
+    requires static java.annotation;
+
+    requires static jakarta.activation;
     requires static jakarta.enterprise.cdi.api;
     requires static jakarta.inject.api;
     requires static jakarta.interceptor.api;
-    requires static java.annotation;
-    requires static jakarta.activation;
 
+    requires io.helidon.common;
     requires io.helidon.common.servicesupport;
     requires io.helidon.common.servicesupport.cdi;
-    requires io.helidon.microprofile.server;
+    requires io.helidon.config;
+    requires io.helidon.webserver;
+    requires io.helidon.webserver.cors;
+
     requires io.helidon.microprofile.config;
-    requires transitive io.helidon.metrics;
+    requires io.helidon.microprofile.server;
 
-    requires transitive microprofile.config.api;
-    requires microprofile.metrics.api;
+    requires micrometer.core;
+    requires micrometer.registry.prometheus;
+    requires simpleclient;
 
+    requires microprofile.config.api;
 
-    exports io.helidon.microprofile.metrics;
+    exports io.helidon.integrations.micrometer;
 
     // this is needed for CDI extensions that use non-public observer methods
-    opens io.helidon.microprofile.metrics to weld.core.impl, io.helidon.microprofile.cdi;
+    opens io.helidon.integrations.micrometer to weld.core.impl, io.helidon.microprofile.cdi;
 
-    provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.metrics.MetricsCdiExtension;
+    provides javax.enterprise.inject.spi.Extension with MicrometerCdiExtension;
 }

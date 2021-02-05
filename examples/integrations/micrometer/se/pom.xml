@@ -23,10 +23,12 @@
         <groupId>io.helidon.applications</groupId>
         <artifactId>helidon-se</artifactId>
         <version>2.2.1-SNAPSHOT</version>
-<!--        <relativePath>../../../../applications/se/pom.xml</relativePath>-->
+        <relativePath>../../../../applications/se/pom.xml</relativePath>
     </parent>
+
     <groupId>io.helidon.examples</groupId>
     <artifactId>helidon-examples-micrometer-se</artifactId>
+
     <name>Helidon SE Examples Micrometer</name>
 
     <description>
@@ -66,7 +68,7 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.integrations</groupId>
-            <artifactId>helidon-micrometer</artifactId>
+            <artifactId>helidon-integrations-micrometer</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

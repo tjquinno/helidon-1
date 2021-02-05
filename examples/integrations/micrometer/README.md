@@ -1,4 +1,4 @@
-# Helidon SE Micrometer Metrics Example
+# Helidon SE Micrometer Example
 
 This example shows a simple greeting application, similar to the one from the 
 Helidon SE QuickStart, enhanced with Micrometer support.

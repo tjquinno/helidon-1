@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package io.helidon.metrics;
+package io.helidon.common.servicesupport;
 
 import java.util.Objects;
 
@@ -24,27 +24,36 @@ import io.helidon.webserver.Service;
 import io.helidon.webserver.cors.CorsEnabledServiceHelper;
 import io.helidon.webserver.cors.CrossOriginConfig;
 
-import static io.helidon.webserver.cors.CorsEnabledServiceHelper.CORS_CONFIG_KEY;
-
 /**
- * Common base implementation for metrics support classes.
+ * Common base implementation for service support classes.
+ * <p>
+ *     This base class takes care of some tasks common to many services, using config and other settings in the builder:
+ *     <ul>
+ *         <li>Seting up the endpoint path (web context) for the service, using settings in the builder and config.</li>
+ *         <li>Providing automatic CORS support (and the ability to control it via config).</li>
+ *     </ul>
  *
- * @param <T> the concrete metrics support class
- * @param <B> the concrete {@code Builder} for {@code T}
+ * <p>
+ *     Concrete implementations must implement {@link #postConfigureEndpoint(Routing.Rules)} to do any service-specific routing.
+ *     See also the {@link Builder} information for possible additional overrides.
+ * </p>
+ *
+ * @param <T> the concrete service support class
+ * @param <B> the concrete {@code Builder} class for {@code T}
  */
-public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B extends MetricsSupportBase.Builder<T, B>>
+public abstract class ServiceSupportBase<T extends ServiceSupportBase<T, B>, B extends ServiceSupportBase.Builder<T, B>>
         implements Service {
 
     private final String context;
     private final CorsEnabledServiceHelper corsEnabledServiceHelper;
 
-    protected MetricsSupportBase(Builder<T, B> builder, String serviceName) {
+    protected ServiceSupportBase(Builder<T, B> builder, String serviceName) {
         this.context = builder.context;
         corsEnabledServiceHelper = CorsEnabledServiceHelper.create(serviceName, builder.crossOriginConfig);
     }
 
     /**
-     * Configure metrics endpoint on the provided routing rules. This method
+     * Configures service endpoint on the provided routing rules. This method
      * just adds the endpoint path (as defaulted or configured).
      * This method is exclusive to
      * {@link #update(io.helidon.webserver.Routing.Rules)} (e.g. you should not
@@ -59,24 +68,47 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
         postConfigureEndpoint(rules);
     }
 
+    /**
+     * Concrete implementations override this method to perform any service-specific routing set-up.
+     *
+     * @param rules {@code Routing.Rules} to be updated
+     */
     protected abstract void postConfigureEndpoint(Routing.Rules rules);
 
     protected String context() {
         return context;
     }
 
-    public abstract static class Builder<T extends MetricsSupportBase<T, B>, B extends Builder<T, B>> implements io.helidon.common.Builder<T> {
+    /**
+     * Abstract implementation of a {@code Builder} for the service.
+     * <p>
+     *     Concrete implementations may override any of the {@code Builder} methods, particularly
+     *     {@link Builder#config(Config)} (to load service-specific values from config into the service-specific {@code Builder}).
+     *     Such overrides should invoke {@code super.xxx(...)} to take advantage of the common behavior implemented here.
+     * </p>
+     *
+     * @param <T> type of the concrete service
+     * @param <B> type of the concrete builder for the service
+     */
+    public abstract static class Builder<T extends ServiceSupportBase<T, B>, B extends Builder<T, B>>
+            implements io.helidon.common.Builder<T> {
 
+        private final Class<B> builderClass;
         private String context;
         private Config config = Config.empty();
         private CrossOriginConfig crossOriginConfig = null;
 
-        protected Builder(String defaultContext) {
+        protected Builder(Class<B> builderClass, String defaultContext) {
+            this.builderClass = builderClass;
             this.context = defaultContext;
         }
 
         /**
          * Sets the configuration to be used by this builder.
+         * <p>
+         *     Concrete builder implementations may override this method but should invoke {@code super.config(config)} to
+         *     benefit from the common routing set-up.
+         * </p>
          *
          * @param config the Helidon config instance
          * @return updated builder instance
@@ -88,7 +120,7 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
                     .asString()
                     .ifPresent(this::webContext);
 
-            config.get(CORS_CONFIG_KEY)
+            config.get(CorsEnabledServiceHelper.CORS_CONFIG_KEY)
                     .as(CrossOriginConfig::create)
                     .ifPresent(this::crossOriginConfig);
 
@@ -125,13 +157,20 @@ public abstract class MetricsSupportBase<T extends MetricsSupportBase<T, B>, B e
          * @param crossOriginConfig {@code CrossOriginConfig} containing CORS set-up
          * @return updated builder instance
          */
-        public Builder<T, B> crossOriginConfig(CrossOriginConfig crossOriginConfig) {
+        public B crossOriginConfig(CrossOriginConfig crossOriginConfig) {
             Objects.requireNonNull(crossOriginConfig, "CrossOriginConfig must be non-null");
             this.crossOriginConfig = crossOriginConfig;
             return me();
         }
 
-        protected abstract B me();
+        /**
+         * Returns correctly-typed {@code this}.
+         *
+         * @return typed "this"
+         */
+        private B me() {
+            return builderClass.cast(this);
+        }
 
         protected Config getWebContextConfig(Config config) {
             return config.get("web-context");
