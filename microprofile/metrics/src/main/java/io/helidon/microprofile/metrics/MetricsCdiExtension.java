@@ -39,9 +39,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Initialized;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
-import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -49,18 +47,12 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.DeploymentException;
-import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.enterprise.inject.spi.ProcessManagedBean;
-import javax.enterprise.inject.spi.ProcessProducerField;
-import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.enterprise.inject.spi.WithAnnotations;
 import javax.enterprise.inject.spi.configurator.AnnotatedTypeConfigurator;
-import javax.inject.Qualifier;
 import javax.inject.Singleton;
-import javax.interceptor.Interceptor;
-import javax.interceptor.InvocationContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -68,8 +60,6 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 
 import io.helidon.common.Errors;
 import io.helidon.common.context.Contexts;
@@ -110,7 +100,11 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 /**
  * MetricsCdiExtension class.
  */
-public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofile.metrics.Metric, MetricsSupport,
+public class MetricsCdiExtension extends CdiExtensionBase<
+        org.eclipse.microprofile.metrics.Metric,
+        MetricsCdiExtension.MpAsyncResponseInfo,
+        MetricsCdiExtension.MpRestEndpointInfo,
+        MetricsSupport,
         MetricsSupport.Builder> {
     private static final Logger LOGGER = Logger.getLogger(MetricsCdiExtension.class.getName());
 
@@ -142,7 +136,6 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
     private final Map<Class<?>, Set<Method>> methodsWithSyntheticSimpleTimer = new HashMap<>();
     private final Set<Class<?>> syntheticSimpleTimerClassesProcessed = new HashSet<>();
     private final Set<Method> syntheticSimpleTimersToRegister = new HashSet<>();
-    private final Map<Method, AsyncResponseInfo> asyncSyntheticSimpleTimerInfo = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     private static <T> T getReference(BeanManager bm, Type type, Bean<?> bean) {
@@ -211,9 +204,11 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
      *
      * @param discovery bean discovery event
      */
-    void before(@Observes BeforeBeanDiscovery discovery) {
+    @Override
+    protected void before(@Observes BeforeBeanDiscovery discovery) {
         LOGGER.log(Level.FINE, () -> "Before bean discovery " + discovery);
 
+        super.before(discovery);
         // Initialize our implementation
         RegistryProducer.clearApplicationRegistry();
 
@@ -230,16 +225,6 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
         // is enough for CDI to intercept invocations of methods so annotated.
         discovery.addAnnotatedType(InterceptorSyntheticSimplyTimed.class, InterceptorSyntheticSimplyTimed.class.getSimpleName());
         discovery.addAnnotatedType(SyntheticSimplyTimed.class, SyntheticSimplyTimed.class.getSimpleName());
-
-        // Config might disable the MP synthetic SimpleTimer feature for JAX-RS endpoints.
-        // For efficiency, prepare to consult config only once rather than from each interceptor instance.
-        discovery.addAnnotatedType(RestEndpointMetricsInfo.class, RestEndpointMetricsInfo.class.getSimpleName());
-
-        asyncSyntheticSimpleTimerInfo.clear();
-    }
-
-    Map<Method, AsyncResponseInfo> asyncResponseInfo() {
-        return asyncSyntheticSimpleTimerInfo;
     }
 
     @Override
@@ -325,6 +310,17 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
         }
     }
 
+    @Override
+    protected MpAsyncResponseInfo newAsyncResponseInfo(Method method) {
+        int slot = asyncParameterSlot(method);
+        return (slot >= 0) ? new MpAsyncResponseInfo(slot) : null;
+    }
+
+    @Override
+    protected MpRestEndpointInfo newRestEndpointInfo() {
+        return new MpRestEndpointInfo(restEndpointsMetricEnabledFromConfig());
+    }
+
     /**
      * Creates or looks up the synthetic {@code SimpleTimer} instance for a JAX-RS method.
      *
@@ -342,21 +338,8 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
 
     private SimpleTimer registerAndSaveAsyncSyntheticSimpleTimer(Method method) {
         SimpleTimer result = syntheticSimpleTimer(method);
-        asyncSyntheticSimpleTimerInfo.computeIfAbsent(method, this::asyncResponse);
+        computeIfAbsentAsyncResponseInfo(method);
         return result;
-    }
-
-    private AsyncResponseInfo asyncResponse(Method m) {
-        int candidateAsyncResponseParameterSlot = 0;
-
-        for (Parameter p : m.getParameters()) {
-            if (AsyncResponse.class.isAssignableFrom(p.getType()) && p.getAnnotation(Suspended.class) != null) {
-                return new AsyncResponseInfo(candidateAsyncResponseParameterSlot);
-            }
-            candidateAsyncResponseParameterSlot++;
-
-        }
-        return null;
     }
 
     /**
@@ -472,6 +455,11 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
                     + " reporting 'false'", t);
             return false;
         }
+    }
+
+    @Override
+    protected MpRestEndpointInfo restEndpointInfo() {
+        return super.restEndpointInfo();
     }
 
     // register metrics with server after security and when
@@ -716,27 +704,24 @@ public class MetricsCdiExtension extends CdiExtensionBase<org.eclipse.microprofi
         }
     }
 
-    /**
-     * A {@code AsyncResponse} parameter annotated with {@code Suspended} in a JAX-RS method subject to inferred
-     * {@code SimplyTimed} behavior.
-     */
-    static class AsyncResponseInfo {
+    protected static class MpRestEndpointInfo extends CdiExtensionBase.RestEndpointInfo<
+            MpAsyncResponseInfo> {
 
-        // which parameter slot in the method the AsyncResponse is
-        private final int parameterSlot;
+        private boolean isEnabled;
 
-        AsyncResponseInfo(int parameterSlot) {
-            this.parameterSlot = parameterSlot;
+        MpRestEndpointInfo(boolean isEnabled) {
+            this.isEnabled = isEnabled;
         }
 
-        /**
-         * Returns the {@code AsyncResponse} argument object in the given invocation.
-         *
-         * @param context the {@code InvocationContext} representing the call with an {@code AsyncResponse} parameter
-         * @return the {@code AsyncResponse} instance
-         */
-        AsyncResponse asyncResponse(InvocationContext context) {
-            return AsyncResponse.class.cast(context.getParameters()[parameterSlot]);
+        boolean isEnabled() {
+            return isEnabled;
+        }
+    }
+
+    protected static class MpAsyncResponseInfo extends CdiExtensionBase.AsyncResponseInfo {
+
+        MpAsyncResponseInfo(int slot) {
+            super(slot);
         }
     }
 }
