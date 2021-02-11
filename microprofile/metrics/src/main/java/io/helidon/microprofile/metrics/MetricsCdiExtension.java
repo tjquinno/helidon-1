@@ -50,6 +50,8 @@ import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.enterprise.inject.spi.ProcessManagedBean;
+import javax.enterprise.inject.spi.ProcessProducerField;
+import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.enterprise.inject.spi.WithAnnotations;
 import javax.enterprise.inject.spi.configurator.AnnotatedTypeConfigurator;
 import javax.inject.Singleton;
@@ -101,7 +103,6 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
  * MetricsCdiExtension class.
  */
 public class MetricsCdiExtension extends CdiExtensionBase<
-        org.eclipse.microprofile.metrics.Metric,
         MetricsCdiExtension.MpAsyncResponseInfo,
         MetricsCdiExtension.MpRestEndpointInfo,
         MetricsSupport,
@@ -168,6 +169,16 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     protected <E extends Member & AnnotatedElement> void register(E element, Class<?> clazz,
             LookupResult<? extends Annotation> lookupResult) {
         MetricUtil.registerMetric(element, clazz, lookupResult.getAnnotation(), lookupResult.getType());
+    }
+
+    protected void recordProducerFields(
+            @Observes ProcessProducerField<? extends org.eclipse.microprofile.metrics.Metric, ?> ppf) {
+        recordProducerField(ppf);
+    }
+
+    protected void recordProducerMethods(
+            @Observes ProcessProducerMethod<? extends org.eclipse.microprofile.metrics.Metric, ?> ppm) {
+        recordProducerMethod(ppm);
     }
 
     private static Tag[] tags(String[] tagStrings) {
