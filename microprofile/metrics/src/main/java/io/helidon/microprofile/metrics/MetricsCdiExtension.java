@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -138,6 +139,9 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     private final Set<Class<?>> syntheticSimpleTimerClassesProcessed = new HashSet<>();
     private final Set<Method> syntheticSimpleTimersToRegister = new HashSet<>();
 
+    private AtomicReference<Config> config = new AtomicReference<>();
+    private AtomicReference<Config> metricsConfig = new AtomicReference<>();
+
     @SuppressWarnings("unchecked")
     private static <T> T getReference(BeanManager bm, Type type, Bean<?> bean) {
         return (T) bm.getReference(bean, type, bm.createCreationalContext(bean));
@@ -179,6 +183,16 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     protected void recordProducerMethods(
             @Observes ProcessProducerMethod<? extends org.eclipse.microprofile.metrics.Metric, ?> ppm) {
         recordProducerMethod(ppm);
+    }
+
+    private Config config() {
+        config.compareAndSet(null, (Config) (ConfigProvider.getConfig()));
+        return config.get();
+    }
+
+    private Config metricsConfig() {
+        metricsConfig.compareAndSet(null, config().get("metrics"));
+        return metricsConfig.get();
     }
 
     private static Tag[] tags(String[] tagStrings) {
@@ -281,7 +295,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         /// Ignore abstract classes or interceptors. Make sure synthetic SimpleTimer creation is enabled, and if so record the
         // class and JAX-RS methods to use in later bean processing.
         if (!checkCandidateClass(pat)
-                || !restEndpointsMetricEnabledFromConfig()) {
+                || !restEndpointInfo().isEnabled()) {
             return;
         }
 
@@ -329,7 +343,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
 
     @Override
     protected MpRestEndpointInfo newRestEndpointInfo() {
-        return new MpRestEndpointInfo(restEndpointsMetricEnabledFromConfig());
+        return new MpRestEndpointInfo(chooseRestEndpointsSetting(metricsConfig()));
     }
 
     /**
@@ -455,34 +469,19 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         syntheticSimpleTimersToRegister.clear();
     }
 
-    boolean restEndpointsMetricEnabledFromConfig() {
-        try {
-            return ((Config) (ConfigProvider.getConfig()))
-                    .get("metrics")
-                    .get(REST_ENDPOINTS_METRIC_ENABLED_PROPERTY_NAME)
-                    .asBoolean().orElse(REST_ENDPOINTS_METRIC_ENABLED_DEFAULT_VALUE);
-        } catch (Throwable t) {
-            LOGGER.log(Level.WARNING, "Error looking up config setting for enabling REST endpoints SimpleTimer metrics;"
-                    + " reporting 'false'", t);
-            return false;
-        }
-    }
-
     @Override
     protected MpRestEndpointInfo restEndpointInfo() {
         return super.restEndpointInfo();
     }
 
-    // register metrics with server after security and when
-    // application scope is initialized
-    @Override
-    protected Routing.Builder registerService(
-                @Observes @Priority(LIBRARY_BEFORE + 10) @Initialized(ApplicationScoped.class) Object adv,
+    // Register vendor metrics after security but before any other services (so the vendor metrics will count accesses
+    // to other services) when application scope is initialized.
+    protected void registerVendorMetricListeners(
+                @Observes @Priority(LIBRARY_BEFORE + 5) @Initialized(ApplicationScoped.class) Object adv,
                 BeanManager bm) {
         Routing.Builder defaultRouting = super.registerService(adv, bm);
 
         Set<String> vendorMetricsAdded = new HashSet<>();
-        Config config = ((Config) ConfigProvider.getConfig()).get("metrics");
 
         ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
 
@@ -490,7 +489,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         vendorMetricsAdded.add("@default");
 
         // now we may have additional sockets we want to add vendor metrics to
-        config.get("vendor-metrics-routings")
+        metricsConfig().get("vendor-metrics-routings")
                 .asList(String.class)
                 .orElseGet(List::of)
                 .forEach(routeName -> {
@@ -502,8 +501,6 @@ public class MetricsCdiExtension extends CdiExtensionBase<
 
         // registry factory is available in global
         Contexts.globalContext().register(RegistryFactory.getInstance());
-
-        return defaultRouting;
     }
 
     private static boolean chooseRestEndpointsSetting(Config metricsConfig) {
@@ -512,11 +509,11 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         boolean result = explicitRestEndpointsSetting.orElse(REST_ENDPOINTS_METRIC_ENABLED_DEFAULT_VALUE);
         if (explicitRestEndpointsSetting.isPresent()) {
             LOGGER.log(Level.FINE, () -> String.format(
-                    "Support for MP REST.reqeust metric and annotation handling explicitly set to %b in configuration",
+                    "Support for MP REST.request metric and annotation handling explicitly set to %b in configuration",
                     explicitRestEndpointsSetting.get()));
         } else {
             LOGGER.log(Level.FINE, () -> String.format(
-                    "Support for MP REST.reqeust metric and annotation handling explicitly defaulted to %b",
+                    "Support for MP REST.request metric and annotation handling defaulted to %b",
                     REST_ENDPOINTS_METRIC_ENABLED_DEFAULT_VALUE));
         }
         return result;
