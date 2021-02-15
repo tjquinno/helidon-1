@@ -66,9 +66,9 @@ import javax.ws.rs.PUT;
 
 import io.helidon.common.Errors;
 import io.helidon.common.context.Contexts;
+import io.helidon.common.servicesupport.cdi.AnnotationLookupResult;
+import io.helidon.common.servicesupport.cdi.AnnotationSiteType;
 import io.helidon.common.servicesupport.cdi.CdiExtensionBase;
-import io.helidon.common.servicesupport.cdi.LookupResult;
-import io.helidon.common.servicesupport.cdi.MatchingType;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigValue;
 import io.helidon.metrics.MetricsSupport;
@@ -165,13 +165,13 @@ public class MetricsCdiExtension extends CdiExtensionBase<
      */
     @Deprecated
     public static <E extends Member & AnnotatedElement>
-    void registerMetric(E element, Class<?> clazz, LookupResult<? extends Annotation> lookupResult) {
+    void registerMetric(E element, Class<?> clazz, AnnotationLookupResult<? extends Annotation> lookupResult) {
         MetricUtil.registerMetric(element, clazz, lookupResult);
     }
 
     @Override
     protected <E extends Member & AnnotatedElement> void register(E element, Class<?> clazz,
-            LookupResult<? extends Annotation> lookupResult) {
+            AnnotationLookupResult<? extends Annotation> lookupResult) {
         MetricUtil.registerMetric(element, clazz, lookupResult.getAnnotation(), lookupResult.getType());
     }
 
@@ -270,7 +270,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     private void recordMetricAnnotatedClass(@Observes
     @WithAnnotations({Counted.class, Metered.class, Timed.class, ConcurrentGauge.class,
             SimplyTimed.class}) ProcessAnnotatedType<?> pat) {
-        checkAndRecordCandidateClass(pat);
+        recordConcreteNonInterceptor(pat);
     }
 
     private void processInjectionPoints(@Observes ProcessInjectionPoint<?, ?> pip) {
@@ -294,7 +294,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
 
         /// Ignore abstract classes or interceptors. Make sure synthetic SimpleTimer creation is enabled, and if so record the
         // class and JAX-RS methods to use in later bean processing.
-        if (!checkCandidateClass(pat)
+        if (!isConcreteNonInterceptor(pat)
                 || !restEndpointInfo().isEnabled()) {
             return;
         }
@@ -424,7 +424,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
             if (metric != null) {
                 String metricName = getMetricName(new AnnotatedElementWrapper(entry.getValue()),
                                                   entry.getValue().getDeclaringType().getJavaClass(),
-                                                  MatchingType.METHOD,
+                                                  AnnotationSiteType.METHOD,
                                                   metric.name(), metric.absolute());
                 T instance = getReference(bm, entry.getValue().getBaseType(), entry.getKey());
                 Metadata md = Metadata.builder()
@@ -478,12 +478,10 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     // to other services) when application scope is initialized.
     protected void registerVendorMetricListeners(
                 @Observes @Priority(LIBRARY_BEFORE + 5) @Initialized(ApplicationScoped.class) Object adv,
-                BeanManager bm) {
-        Routing.Builder defaultRouting = super.registerService(adv, bm);
+                BeanManager bm, ServerCdiExtension server) {
+        Routing.Builder defaultRouting = super.registerService(adv, bm, server);
 
         Set<String> vendorMetricsAdded = new HashSet<>();
-
-        ServerCdiExtension server = bm.getExtension(ServerCdiExtension.class);
 
         serviceSupport().configureVendorMetrics(null, defaultRouting);
         vendorMetricsAdded.add("@default");
