@@ -68,7 +68,7 @@ import io.helidon.common.Errors;
 import io.helidon.common.context.Contexts;
 import io.helidon.common.servicesupport.cdi.AnnotationLookupResult;
 import io.helidon.common.servicesupport.cdi.AnnotationSiteType;
-import io.helidon.common.servicesupport.cdi.CdiExtensionBase;
+import io.helidon.common.servicesupport.cdi.HelidonRestCdiExtension;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigValue;
 import io.helidon.metrics.MetricsSupport;
@@ -103,7 +103,7 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 /**
  * MetricsCdiExtension class.
  */
-public class MetricsCdiExtension extends CdiExtensionBase<
+public class MetricsCdiExtension extends HelidonRestCdiExtension<
         MetricsCdiExtension.MpAsyncResponseInfo,
         MetricsCdiExtension.MpRestEndpointInfo,
         MetricsSupport,
@@ -172,7 +172,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
     @Override
     protected <E extends Member & AnnotatedElement> void register(E element, Class<?> clazz,
             AnnotationLookupResult<? extends Annotation> lookupResult) {
-        MetricUtil.registerMetric(element, clazz, lookupResult.getAnnotation(), lookupResult.getType());
+        MetricUtil.registerMetric(element, clazz, lookupResult.annotation(), lookupResult.siteType());
     }
 
     protected void recordProducerFields(
@@ -710,7 +710,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         }
     }
 
-    protected static class MpRestEndpointInfo extends CdiExtensionBase.RestEndpointInfo<
+    protected static class MpRestEndpointInfo extends HelidonRestCdiExtension.RestEndpointInfo<
             MpAsyncResponseInfo> {
 
         private boolean isEnabled;
@@ -724,7 +724,7 @@ public class MetricsCdiExtension extends CdiExtensionBase<
         }
     }
 
-    protected static class MpAsyncResponseInfo extends CdiExtensionBase.AsyncResponseInfo {
+    protected static class MpAsyncResponseInfo extends HelidonRestCdiExtension.AsyncResponseInfo {
 
         MpAsyncResponseInfo(int slot) {
             super(slot);
