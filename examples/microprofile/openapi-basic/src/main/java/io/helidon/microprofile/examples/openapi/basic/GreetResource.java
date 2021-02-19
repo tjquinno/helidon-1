@@ -36,6 +36,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
@@ -64,6 +65,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 public class GreetResource {
 
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Collections.emptyMap());
+
+    static final String PARAM_LEVEL_DESCR = "Param-level description";
 
     /**
      * The greeting message provider.
@@ -110,7 +113,9 @@ public class GreetResource {
             content = @Content(mediaType = "application/json",
                                schema = @Schema(implementation = GreetingMessage.class)))
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonObject getMessage(@PathParam("name") String name) {
+    public JsonObject getMessage(
+            @Parameter(description = PARAM_LEVEL_DESCR)
+            @PathParam("name") String name) {
         return createResponse(name);
     }
 

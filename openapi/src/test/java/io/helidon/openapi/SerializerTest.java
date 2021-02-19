@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2020, 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package io.helidon.openapi;
 
+import io.smallrye.openapi.runtime.io.Format;
 import io.smallrye.openapi.runtime.io.OpenApiSerializer;
 import org.eclipse.microprofile.openapi.models.OpenAPI;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,7 +53,7 @@ class SerializerTest {
     public void testJSONSerialization() throws IOException {
         OpenAPI openAPI = ParserTest.parse(helper, "/openapi-greeting.yml", OpenAPISupport.OpenAPIMediaType.YAML);
         Writer writer = new StringWriter();
-        Serializer.serialize(helper.types(), implsToTypes, openAPI, OpenApiSerializer.Format.JSON, writer);
+        Serializer.serialize(helper.types(), implsToTypes, openAPI, Format.JSON, writer);
         JsonStructure json = TestUtil.jsonFromReader(new StringReader(writer.toString()));
 
         assertThat(json.getValue("/x-my-personal-map/owner/last").toString(), is("\"Myself\""));
@@ -128,7 +129,7 @@ class SerializerTest {
     public void testYAMLSerialization() throws IOException {
         OpenAPI openAPI = ParserTest.parse(helper, "/openapi-greeting.yml", OpenAPISupport.OpenAPIMediaType.YAML);
         Writer writer = new StringWriter();
-        Serializer.serialize(helper.types(), implsToTypes, openAPI, OpenApiSerializer.Format.YAML, writer);
+        Serializer.serialize(helper.types(), implsToTypes, openAPI, Format.YAML, writer);
         try (Reader reader = new StringReader(writer.toString())) {
             openAPI = OpenAPIParser.parse(helper.types(), reader, OpenAPISupport.OpenAPIMediaType.JSON);
         }

@@ -99,6 +99,9 @@ final class CustomConstructor extends Constructor {
                 }
             });
         }
+        /*
+            A bit of a hack... The parsing (correctly) interprets
+         */
         super.constructMapping2ndStep(node, mapping);
     }
 }

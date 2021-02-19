@@ -19,6 +19,7 @@ package io.helidon.microprofile.examples.openapi.basic;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.spi.CDI;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonPointer;
 import javax.json.JsonString;
@@ -83,25 +84,38 @@ class MainTest {
     public void testOpenAPI() {
 
         Client client = ClientBuilder.newClient();
+        try {
+            JsonObject jsonObject = client
+                    .target(getConnectionString("/openapi"))
+                    .request(MediaType.APPLICATION_JSON)
+                    .get(JsonObject.class);
+            JsonObject paths = jsonObject.get("paths")
+                    .asJsonObject();
 
-        JsonObject jsonObject = client
-                .target(getConnectionString("/openapi"))
-                .request(MediaType.APPLICATION_JSON)
-                .get(JsonObject.class);
-        JsonObject paths = jsonObject.get("paths").asJsonObject();
+            JsonPointer jp = Json.createPointer("/" + escape(SimpleAPIModelReader.MODEL_READER_PATH) + "/get/summary");
+            JsonString js = JsonString.class.cast(jp.getValue(paths));
+            Assertions.assertEquals(SimpleAPIModelReader.SUMMARY, js.getString(), "/test/newpath GET summary did not match");
 
-        JsonPointer jp = Json.createPointer("/" + escape(SimpleAPIModelReader.MODEL_READER_PATH) + "/get/summary");
-        JsonString js = JsonString.class.cast(jp.getValue(paths));
-        Assertions.assertEquals(SimpleAPIModelReader.SUMMARY, js.getString(), "/test/newpath GET summary did not match");
+            jp = Json.createPointer("/" + escape(SimpleAPIModelReader.DOOMED_PATH));
+            Assertions.assertFalse(jp.containsValue(paths), "/test/doomed should not appear but does");
 
-        jp = Json.createPointer("/" + escape(SimpleAPIModelReader.DOOMED_PATH));
-        Assertions.assertFalse(jp.containsValue(paths), "/test/doomed should not appear but does");
+            jp = Json.createPointer("/" + escape("/greet") + "/get/summary");
+            js = JsonString.class.cast(jp.getValue(paths));
+            Assertions.assertEquals("Returns a generic greeting", js.getString(), "/greet GET summary did not match");
 
-        jp = Json.createPointer("/" + escape("/greet") + "/get/summary");
-        js = JsonString.class.cast(jp.getValue(paths));
-        Assertions.assertEquals("Returns a generic greeting", js.getString(), "/greet GET summary did not match");
+            // Make sure the parameter-level @Parameter and @PathParam values are merged
+            jp = Json.createPointer("/" + escape("/greet/{name}") + "/get/parameters");
+            JsonArray ja = JsonArray.class.cast(jp.getValue(paths));
+            Assertions.assertEquals(1, ja.size(), "Array of parameters should be of length 1");
 
-        client.close();
+            JsonObject nameParam = ja.getJsonObject(0);
+            Assertions.assertEquals("name", nameParam.getString("name"), "Unexpected name");
+            Assertions.assertEquals("path", nameParam.getString("in"), "Unexpected 'in' setting");
+            Assertions.assertEquals(GreetResource.PARAM_LEVEL_DESCR, nameParam.get("description"),
+                    "Missing or unexpected description");
+        } finally {
+            client.close();
+        }
     }
 
     @AfterAll

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019,2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019,2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.enterprise.inject.spi.CDI;
@@ -113,9 +114,10 @@ public final class MPOpenAPIBuilder extends OpenAPISupport.Builder {
              */
             return defaultResultSupplier.get();
         }
-        return appClassesToScan.stream()
-                .map(this::appRelatedClassesToFilteredIndexView)
-                .collect(Collectors.toList());
+//        return appClassesToScan.stream()
+//                .map(this::appRelatedClassesToFilteredIndexView)
+//                .collect(Collectors.toList());
+        return defaultResultSupplier.get();
     }
 
     private static boolean isNonSynthetic(JaxRsApplication jaxRsApp) {
@@ -174,16 +176,10 @@ public final class MPOpenAPIBuilder extends OpenAPISupport.Builder {
          * Create an OpenAPIConfig instance to limit scanning to this app's classes by overriding any inclusions of classes or
          * packages specified in the config with our own inclusions based on this app's classes.
          */
-        OpenApiConfigImpl openAPIFilteringConfig = new OpenApiConfigImpl(mpConfig);
-        Set<String> scanClasses = openAPIFilteringConfig.scanClasses();
-        scanClasses.clear();
-        openAPIFilteringConfig.scanPackages().clear();
-
-        appRelatedClassesToScan.stream()
-                .map(Class::getName)
-                .forEach(scanClasses::add);
+        OpenApiFilteringConfig openAPIFilteringConfig = new OpenApiFilteringConfig(mpConfig, appRelatedClassesToScan);
 
         FilteredIndexView result = new FilteredIndexView(indexView.get(), openAPIFilteringConfig);
+
         return result;
     }
 
@@ -224,4 +220,24 @@ public final class MPOpenAPIBuilder extends OpenAPISupport.Builder {
         }
     }
 
+    static class OpenApiFilteringConfig extends OpenApiConfigImpl {
+
+        private Pattern scanClasses;
+
+        OpenApiFilteringConfig(Config config, Set<Class<?>> appRelatedClassesToScan) {
+            super(config);
+
+            String pattern = appRelatedClassesToScan.stream()
+                    .map(Class::getName)
+                    .map(Pattern::quote)
+                    .collect(Collectors.joining("|"));
+
+            scanClasses = Pattern.compile(pattern);
+        }
+
+        @Override
+        public Pattern scanClasses() {
+            return scanClasses;
+        }
+    }
 }

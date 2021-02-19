@@ -69,8 +69,8 @@ import io.smallrye.openapi.api.models.OpenAPIImpl;
 import io.smallrye.openapi.api.util.MergeUtil;
 import io.smallrye.openapi.runtime.OpenApiProcessor;
 import io.smallrye.openapi.runtime.OpenApiStaticFile;
+import io.smallrye.openapi.runtime.io.Format;
 import io.smallrye.openapi.runtime.io.OpenApiSerializer;
-import io.smallrye.openapi.runtime.io.OpenApiSerializer.Format;
 import io.smallrye.openapi.runtime.scanner.AnnotationScannerExtension;
 import io.smallrye.openapi.runtime.scanner.FilteredIndexView;
 import io.smallrye.openapi.runtime.scanner.OpenApiAnnotationScanner;
@@ -80,7 +80,11 @@ import org.eclipse.microprofile.openapi.models.Operation;
 import org.eclipse.microprofile.openapi.models.PathItem;
 import org.eclipse.microprofile.openapi.models.Reference;
 import org.eclipse.microprofile.openapi.models.media.Schema;
+import org.eclipse.microprofile.openapi.models.responses.APIResponse;
+import org.eclipse.microprofile.openapi.models.responses.APIResponses;
 import org.eclipse.microprofile.openapi.models.servers.ServerVariable;
+import org.jboss.jandex.CompositeIndex;
+import org.jboss.jandex.IndexView;
 import org.yaml.snakeyaml.TypeDescription;
 
 import static io.helidon.webserver.cors.CorsEnabledServiceHelper.CORS_CONFIG_KEY;
@@ -208,6 +212,15 @@ public class OpenAPISupport implements Service {
         });
 
         /*
+         * The APIResponses interface uses a Map<String, APIResponse> where the key is the HTTP result code
+         * or "default." When SnakeYAML sees an integer it creates an internal integer value. But then it
+         * cannot add a map entry using the integer key.
+         */
+        ExpandedTypeDescription apiResponsesTD = types.get(APIResponses.class);
+        apiResponsesTD.substituteProperty("responses", Map.class, "getAPIResponses", "setAPIResponses", String.class,
+                APIResponse.class);
+
+        /*
          * SnakeYAML derives properties only from methods declared directly by each OpenAPI interface, not from methods defined
          *  on other interfaces which the original one extends. Those we have to handle explicitly.
          */
@@ -294,14 +307,19 @@ public class OpenAPISupport implements Service {
          * Conduct a SmallRye OpenAPI annotation scan for each filtered index view, merging the resulting OpenAPI models into one.
          * The AtomicReference is effectively final so we can update the actual reference from inside the lambda.
          */
-        AtomicReference<OpenAPIImpl> aggregateModelRef = new AtomicReference<>(new OpenAPIImpl()); // Start with skeletal model
-        filteredIndexViews.forEach(filteredIndexView -> {
-                OpenApiAnnotationScanner scanner = new OpenApiAnnotationScanner(config, filteredIndexView,
-                        List.of(new HelidonAnnotationScannerExtension()));
-                OpenAPIImpl modelForApp = scanner.scan();
-                aggregateModelRef.set(MergeUtil.merge(aggregateModelRef.get(), modelForApp));
-            });
-        OpenApiDocument.INSTANCE.modelFromAnnotations(aggregateModelRef.get());
+        CompositeIndex c = CompositeIndex.create(filteredIndexViews.toArray(IndexView[]::new));
+        OpenApiAnnotationScanner scanner  = new OpenApiAnnotationScanner(config, c,
+                List.of(new HelidonAnnotationScannerExtension()));
+        OpenAPI modelFromAnnotations = scanner.scan();
+        OpenApiDocument.INSTANCE.modelFromAnnotations(modelFromAnnotations);
+//        AtomicReference<OpenAPI> aggregateModelRef = new AtomicReference<>(new OpenAPIImpl()); // Start with skeletal model
+//        filteredIndexViews.forEach(filteredIndexView -> {
+//                OpenApiAnnotationScanner scanner = new OpenApiAnnotationScanner(config, filteredIndexView,
+//                        List.of(new HelidonAnnotationScannerExtension()));
+//                OpenAPI modelForApp = scanner.scan();
+//                aggregateModelRef.set(MergeUtil.merge(aggregateModelRef.get(), modelForApp));
+//            });
+//        OpenApiDocument.INSTANCE.modelFromAnnotations(aggregateModelRef.get());
     }
 
     private static ClassLoader getContextClassLoader() {
@@ -520,7 +538,7 @@ public class OpenAPISupport implements Service {
             this.fileTypes = new ArrayList<>(Arrays.asList(fileTypes));
         }
 
-        private OpenApiSerializer.Format format() {
+        private Format format() {
             return format;
         }
 
