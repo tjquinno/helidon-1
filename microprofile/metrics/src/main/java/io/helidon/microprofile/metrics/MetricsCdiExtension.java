@@ -110,7 +110,7 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
         MetricsSupport.Builder> {
     private static final Logger LOGGER = Logger.getLogger(MetricsCdiExtension.class.getName());
 
-    private static final Set<Class<? extends Annotation>> METRIC_ANNOTATIONS
+    public static final Set<Class<? extends Annotation>> METRIC_ANNOTATIONS
             = Set.of(Counted.class, Metered.class, Timed.class, ConcurrentGauge.class, SimplyTimed.class, Metric.class);
 
     private static final List<Class<? extends Annotation>> JAX_RS_ANNOTATIONS
@@ -152,6 +152,10 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
      */
     public MetricsCdiExtension() {
         super(LOGGER, METRIC_ANNOTATIONS, MetricProducer.class, (Config config) -> MetricsSupport.create(config), "metrics");
+    }
+
+    protected MetricsCdiExtension(Logger logger, Set<Class<? extends Annotation>> metricAnnotations) {
+        super(logger, metricAnnotations, null, null, null);
     }
 
     /**
