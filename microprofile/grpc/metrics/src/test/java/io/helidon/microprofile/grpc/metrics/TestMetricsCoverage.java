@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 @HelidonTest
 
-@AddBean(CoverageTestBean.class)
+@AddBean(CoverageTestBeanOld.class)
 @AddExtension(TestGrpcMetricsCdiExtension.class)
 public class TestMetricsCoverage {
 

@@ -54,7 +54,7 @@ public class TestGrpcMetricsCdiExtension implements Extension {
      * </p>
      * @param pat
      */
-    void recordMetricsAnnotationsOnTestBean(@Observes @Priority(GrpcMetricsCdiExtension.OBSERVER_PRIORITY - 10) @WithAnnotations(Grpc.class) ProcessAnnotatedType<CoverageTestBean> pat) {
+    void recordMetricsAnnotationsOnTestBean(@Observes @Priority(GrpcMetricsCdiExtension.OBSERVER_PRIORITY - 10) @WithAnnotations(Grpc.class) ProcessAnnotatedType<CoverageTestBeanOld> pat) {
 
         metricsAnnotationsUsed = new HashSet<>();
 
@@ -77,7 +77,7 @@ public class TestGrpcMetricsCdiExtension implements Extension {
      *
      * @param pmb the ProcessManagedBean event
      */
-    void checkForMetricsAnnotations(@Observes ProcessManagedBean<CoverageTestBean> pmb) {
+    void checkForMetricsAnnotations(@Observes ProcessManagedBean<CoverageTestBeanOld> pmb) {
 
         remainingTestBeanMethodAnnotations = new HashMap<>();
 
