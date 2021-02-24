@@ -30,7 +30,7 @@ import javax.enterprise.context.Dependent;
 @Dependent
 @Grpc()
 
-public class CoverageTestBean {
+public class CoverageTestBeanOld {
 
     // There should be one method with each kind of metric annotation (except Metric).
     @Counted(name = "counter")

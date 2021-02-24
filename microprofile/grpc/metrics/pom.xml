@@ -105,5 +105,43 @@
                 <version>${version.plugin.os}</version>
             </extension>
         </extensions>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-coverage-beans</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-proc:only</arg>
+                                <arg>-processor</arg>
+                                <arg>io.helidon.microprofile.grpc.metrics.CoverageTestBeanAP</arg>
+                            </compilerArgs>
+                            <testIncludes>
+                                <include>**/CoverageTestBeanAP.java</include>
+                            </testIncludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-coverage-beans</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <!-- the AP generates files and the compiler plugin detects changes
+                                 turn-it off to not re-compile everything -->
+                            <useIncrementalCompilation>false</useIncrementalCompilation>
+                            <testIncludes>
+                                <include>**/CoverageTestBean.java</include>
+                            </testIncludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>
