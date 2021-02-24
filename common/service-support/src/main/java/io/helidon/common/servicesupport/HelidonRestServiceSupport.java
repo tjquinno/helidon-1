@@ -19,6 +19,7 @@ package io.helidon.common.servicesupport;
 import java.util.Objects;
 
 import io.helidon.config.Config;
+import io.helidon.config.DeprecatedConfig;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.Service;
 import io.helidon.webserver.cors.CorsEnabledServiceHelper;
@@ -174,7 +175,7 @@ public abstract class HelidonRestServiceSupport<T extends HelidonRestServiceSupp
         }
 
         protected Config webContextConfig(Config config) {
-            return config.get("web-context");
+            return DeprecatedConfig.get(config, "web-context", "context");
         }
     }
 }

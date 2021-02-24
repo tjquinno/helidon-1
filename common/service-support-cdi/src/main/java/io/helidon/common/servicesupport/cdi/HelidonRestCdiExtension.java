@@ -413,7 +413,7 @@ public abstract class HelidonRestCdiExtension<
 
     protected void recordProducerMember(String logPrefix, AnnotatedMember<?> member, Bean<?> bean) {
         logger.log(Level.FINE, () -> logPrefix + " " + bean.getBeanClass());
-        if (!ownProducer.equals(bean.getBeanClass())) {
+        if (!bean.getBeanClass().equals(ownProducer)) {
             Set<Class<? extends Annotation>> siteAnnotationTypes = new HashSet<>();
 
             for (Annotation memberAnnotation : member.getAnnotations()) {
