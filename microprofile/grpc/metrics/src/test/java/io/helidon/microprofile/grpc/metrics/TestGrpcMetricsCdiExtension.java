@@ -31,7 +31,7 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessManagedBean;
 import javax.enterprise.inject.spi.WithAnnotations;
 
-import io.helidon.microprofile.grpc.core.Grpc;
+import io.helidon.microprofile.grpc.core.GrpcMethod;
 import io.helidon.microprofile.metrics.MetricsCdiExtension;
 
 public class TestGrpcMetricsCdiExtension implements Extension {
@@ -41,7 +41,7 @@ public class TestGrpcMetricsCdiExtension implements Extension {
     private static Map<AnnotatedMethod, Set<Class<? extends Annotation>>> remainingTestBeanMethodAnnotations;
 
     /**
-     * Collects all the metrics annotations that are used on methods in the {@code CoverageTestBean}.
+     * Collects all the metrics annotations that are used on methods in the {@code CoverageTestBeanBase}.
      * <p>
      *     A test retrieves this collection and makes sure that all the metric annotations known to the main Helidon metrics
      *     module are accounted for on methods on the test bean. That's because another test makes sure that the gRPC
@@ -54,10 +54,12 @@ public class TestGrpcMetricsCdiExtension implements Extension {
      * </p>
      * @param pat
      */
-    void recordMetricsAnnotationsOnTestBean(@Observes @Priority(GrpcMetricsCdiExtension.OBSERVER_PRIORITY - 10) @WithAnnotations(Grpc.class) ProcessAnnotatedType<CoverageTestBean> pat) {
+    void recordMetricsAnnotationsOnTestBean(@Observes @Priority(GrpcMetricsCdiExtension.OBSERVER_PRIORITY - 10) @WithAnnotations(GrpcMethod.class) ProcessAnnotatedType<?> pat) {
 
         metricsAnnotationsUsed = new HashSet<>();
-
+        if (!CoverageTestBeanBase.class.isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
+            return;
+        }
         pat.getAnnotatedType()
             .getMethods()
             .forEach(m -> {
@@ -77,8 +79,11 @@ public class TestGrpcMetricsCdiExtension implements Extension {
      *
      * @param pmb the ProcessManagedBean event
      */
-    void checkForMetricsAnnotations(@Observes ProcessManagedBean<CoverageTestBean> pmb) {
+    void checkForMetricsAnnotations(@Observes ProcessManagedBean<?> pmb) {
 
+        if (!CoverageTestBeanBase.class.isAssignableFrom(pmb.getAnnotatedBeanClass().getJavaClass())) {
+            return;
+        }
         remainingTestBeanMethodAnnotations = new HashMap<>();
 
         pmb.getAnnotatedBeanClass().getMethods().forEach(m -> {

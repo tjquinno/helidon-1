@@ -19,11 +19,14 @@ package io.helidon.microprofile.grpc.metrics;
 import io.helidon.microprofile.tests.junit5.AddBean;
 import io.helidon.microprofile.tests.junit5.AddExtension;
 import io.helidon.microprofile.tests.junit5.HelidonTest;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.CDI;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,10 +36,23 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 @HelidonTest
-
-@AddBean(CoverageTestBean.class)
+@AddBean(TestMetricsCoverage.GeneratedBeanCatalog.class)
 @AddExtension(TestGrpcMetricsCdiExtension.class)
 public class TestMetricsCoverage {
+
+    interface GeneratedBeanCatalog {
+        List<Class<? extends CoverageTestBeanBase>> generatedBeanClasses();
+    }
+
+    @BeforeAll
+    public static void createdGeneratedBeans() {
+        GeneratedBeanCatalog catalog = newBean(GeneratedBeanCatalog.class);
+        catalog.generatedBeanClasses().forEach(c -> newBean(c));
+    }
+
+    static <T> T newBean(Class<T> beanClass) {
+        return CDI.current().select(beanClass).get();
+    }
 
     @Test
     public void checkThatAllMetricsWereRemovedFromGrpcMethods() {
@@ -54,7 +70,7 @@ public class TestMetricsCoverage {
                 new HashSet<>(GrpcMetricsCdiExtension.METRICS_ANNOTATIONS_TO_CHECK);
         metricsAnnotationsUnused.removeAll(TestGrpcMetricsCdiExtension.metricsAnnotationsUsed());
 
-        assertThat("The CoverageTestBean seems not to cover all known annotations", metricsAnnotationsUnused, is(empty()));
+        assertThat("The CoverageTestBeanBase seems not to cover all known annotations", metricsAnnotationsUnused, is(empty()));
     }
 
     /**
