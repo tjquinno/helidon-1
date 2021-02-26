@@ -17,12 +17,8 @@
 package io.helidon.microprofile.grpc.metrics;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.annotation.Priority;
 import javax.enterprise.event.Observes;
@@ -35,11 +31,13 @@ import javax.interceptor.Interceptor;
 import io.helidon.microprofile.grpc.core.AnnotatedMethod;
 import io.helidon.microprofile.grpc.core.Grpc;
 import io.helidon.microprofile.grpc.core.GrpcMethod;
-
 import io.helidon.microprofile.metrics.MetricsCdiExtension;
+
+import org.eclipse.microprofile.metrics.annotation.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Metered;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.eclipse.microprofile.metrics.annotation.SimplyTimed;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 
 /**
@@ -75,7 +73,8 @@ public class GrpcMetricsCdiExtension
      * @param pat  the {@link ProcessAnnotatedType} to observer
      */
     private void registerMetrics(@Observes
-                                 @WithAnnotations({Counted.class, Timed.class, Metered.class, Grpc.class})
+                                 @WithAnnotations({Counted.class, Timed.class, Metered.class, ConcurrentGauge.class,
+                                         SimplyTimed.class, Grpc.class})
                                  @Priority(OBSERVER_PRIORITY)
                                  ProcessAnnotatedType<?> pat) {
         METRICS_ANNOTATIONS_TO_CHECK.forEach(type ->

@@ -22,32 +22,47 @@ import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import io.helidon.microprofile.metrics.MetricsCdiExtension;
+
 import org.eclipse.microprofile.metrics.annotation.Metric;
 
 /**
  * Generates test beans for metrics annotation coverage testing.
+ * <p>
+ *     The gRPC CDI extension removes metrics annotations from methods that also have {@code @GrpcMethod}. It does so
+ *     by observing beans using {@code @WithAnnotations} that lists the metrics annotations. That list--as well as some
+ *     other code in gRPC metrics--should be updated when new metrics appear in MP metrics.
+ * </p>
+ * <p>
+ *     This annotation processor does not really process annotations but generates source code for test beans, one per metrics
+ *     annotation (as recorded in the microprofile/metrics artifact). The test CDI extension then checks the generated beans
+ *     to make sure the real gRPC extension has properly processed all metrics annotations.
+ * </p>
+ * <p>
+ *     This class also generates a catalog of the generated bean classes. The test CDI extension loads that class as a
+ *     service to find out exactly what classes were generated.
+ * </p>
  */
 @SupportedAnnotationTypes(value = {"*"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
-
 public class CoverageTestBeanAP extends AbstractProcessor {
 
     private static final String PACKAGE = CoverageTestBeanAP.class.getPackageName();
 
-    private static final List<String> LINE_TEMPLATES = List.of(
+    private static final List<String> TEST_BEAN_LINE_TEMPLATES = List.of(
             "package %1$s;",
             "import %2$s;",
             "import io.helidon.microprofile.grpc.core.GrpcMethod;",
@@ -64,56 +79,65 @@ public class CoverageTestBeanAP extends AbstractProcessor {
             "import java.util.List;",
             "import javax.enterprise.context.ApplicationScoped;",
             "@ApplicationScoped",
-            "class CoverageTestBeanCatalog implements TestMetricsCoverage.GeneratedBeanCatalog {",
+            "public class CoverageTestBeanCatalog implements TestMetricsCoverage.GeneratedBeanCatalog {",
             "    @Override",
             "    public List<Class<? extends CoverageTestBeanBase>> generatedBeanClasses() {",
             "        return List.of(%2$s);",
             "    }",
             "}");
 
-    private boolean done = false; // suppress odd double executions
+    private boolean codeGenerationDone = false;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (!done) {
-            Filer filer = processingEnv.getFiler();
+        /*
+         * We will be run once per round of annotation processing, but we only generate classes during the first round.
+         */
+        if (!codeGenerationDone) {
 
-            Set<Class<? extends Annotation>> annotationsToTest = new HashSet<>(MetricsCdiExtension.METRIC_ANNOTATIONS);
-            annotationsToTest.remove(Metric.class);
+            Set<String> generatedSimpleClassNames = generateTestBeanClasses();
+            generateTestBeanCatalog(generatedSimpleClassNames);
 
-            Set<String> generatedSimpleClassNames = new HashSet<>();
-
-            System.out.println("Starting CoverageTestBeanXXX generation");
-            for (Class<? extends Annotation> a : annotationsToTest) {
-                String generatedClassName = "CoverageTestBean" + a.getSimpleName();
-                generatedSimpleClassNames.add(generatedClassName + ".class");
-
-                try {
-                    JavaFileObject fileObject = filer.createSourceFile(outputFileName(generatedClassName));
-                    try (PrintWriter pw = new PrintWriter(fileObject.openWriter())) {
-                        LINE_TEMPLATES.forEach(t -> pw.println(
-                                String.format(t, PACKAGE, a.getName(), a.getSimpleName(), generatedClassName)));
-                    }
-                } catch (IOException e) {
-                    throw new IllegalStateException("Error generating " + outputFileName(generatedClassName), e);
-                }
-            }
-            String classNamesList = generatedSimpleClassNames.stream().collect(Collectors.joining(","));
-            try {
-                JavaFileObject catalogFileObject =
-                        filer.createSourceFile(outputFileName("CoverageTestBeanCatalog"));
-                try (PrintWriter pw = new PrintWriter(catalogFileObject.openWriter())) {
-                    CATALOG_LINE_TEMPLATES.forEach(t -> pw.println(
-                            String.format(t, PACKAGE, classNamesList
-                                    )));
-                }
-            } catch (IOException e) {
-                throw new IllegalStateException("Error generating generated bean catalog", e);
-            }
-
-            done = true;
+            codeGenerationDone = true;
         }
         return true;
+    }
+
+    private Set<String> generateTestBeanClasses() {
+        Set<Class<? extends Annotation>> annotationsToTest = new HashSet<>(GrpcMetricsCdiExtension.METRICS_ANNOTATIONS_TO_CHECK);
+
+        Set<String> generatedSimpleClassNames = new HashSet<>();
+
+        for (Class<? extends Annotation> a : annotationsToTest) {
+            String generatedClassName = "CoverageTestBean" + a.getSimpleName();
+            generatedSimpleClassNames.add(generatedClassName + ".class");
+
+            generateSourceFile(generatedClassName, TEST_BEAN_LINE_TEMPLATES,
+                    PACKAGE, a.getName(), a.getSimpleName(), generatedClassName);
+        }
+        return generatedSimpleClassNames;
+    }
+
+    private void generateTestBeanCatalog(Set<String> generatedSimpleClassNames) {
+
+        String classNamesList = generatedSimpleClassNames.stream().collect(Collectors.joining(","));
+        generateSourceFile("CoverageTestBeanCatalog", CATALOG_LINE_TEMPLATES, PACKAGE, classNamesList);
+    }
+
+    private void generateSourceFile(String simpleClassName, List<String> formatLines, String... formatArgs) {
+        Filer filer = processingEnv.getFiler();
+        Messager messager = processingEnv.getMessager();
+
+        try {
+            JavaFileObject catalogFileObject =
+                    filer.createSourceFile(outputFileName(simpleClassName));
+            try (PrintWriter pw = new PrintWriter(catalogFileObject.openWriter())) {
+                formatLines.forEach(t -> pw.println(String.format(t, formatArgs)));
+            }
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.WARNING, String.format("Error generating file %s;%n%s",
+                    simpleClassName, e.toString()));
+        }
     }
 
     private static String outputFileName(String simpleClassName) {

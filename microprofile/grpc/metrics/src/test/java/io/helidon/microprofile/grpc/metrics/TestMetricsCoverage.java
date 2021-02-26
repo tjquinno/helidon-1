@@ -16,61 +16,42 @@
  */
 package io.helidon.microprofile.grpc.metrics;
 
-import io.helidon.microprofile.tests.junit5.AddBean;
-import io.helidon.microprofile.tests.junit5.AddExtension;
-import io.helidon.microprofile.tests.junit5.HelidonTest;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.CDI;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.inject.Inject;
+
+import io.helidon.microprofile.tests.junit5.AddExtension;
+import io.helidon.microprofile.tests.junit5.HelidonTest;
+
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 
 @HelidonTest
-@AddBean(TestMetricsCoverage.GeneratedBeanCatalog.class)
-@AddExtension(TestGrpcMetricsCdiExtension.class)
+@AddExtension(GrpcMetricsCoverageTestCdiExtension.class)
 public class TestMetricsCoverage {
 
     interface GeneratedBeanCatalog {
         List<Class<? extends CoverageTestBeanBase>> generatedBeanClasses();
     }
 
-    @BeforeAll
-    public static void createdGeneratedBeans() {
-        GeneratedBeanCatalog catalog = newBean(GeneratedBeanCatalog.class);
-        catalog.generatedBeanClasses().forEach(c -> newBean(c));
-    }
-
-    static <T> T newBean(Class<T> beanClass) {
-        return CDI.current().select(beanClass).get();
-    }
+    @Inject
+    GrpcMetricsCoverageTestCdiExtension extension;
 
     @Test
     public void checkThatAllMetricsWereRemovedFromGrpcMethods() {
 
         Map<AnnotatedMethod, Set<Class<? extends Annotation>>> leftoverAnnotations =
-                TestGrpcMetricsCdiExtension.remainingTestBeanMethodAnnotations();
+                extension.remainingTestBeanMethodAnnotations();
 
         assertThat("Metrics annotations unexpectedly remain on method", leftoverAnnotations.keySet(), is(empty()));
-    }
-
-    @Test
-    public void checkThatAllMetricsAnnotationsWereEncountered() {
-
-        Set<Class<? extends Annotation>> metricsAnnotationsUnused =
-                new HashSet<>(GrpcMetricsCdiExtension.METRICS_ANNOTATIONS_TO_CHECK);
-        metricsAnnotationsUnused.removeAll(TestGrpcMetricsCdiExtension.metricsAnnotationsUsed());
-
-        assertThat("The CoverageTestBeanBase seems not to cover all known annotations", metricsAnnotationsUnused, is(empty()));
     }
 
     /**
@@ -82,16 +63,18 @@ public class TestMetricsCoverage {
      *     metrics (if more are added) happens on that one table.
      * </p>
      * <p>
-     *     This test makes sure that the map created there contains an entry for every type of metric annotation known to Helidon
+     *     This test makes sure that the map created there contains an entry for every type of metric annotation known to
+     *     Helidon
      *     Microprofile metrics.
      * </p>
      */
     @Test
-    public void checkForAllMetricsInMetricInfo() {
+    public void checkForAllMetricsInMetricsConfigurer() {
         Set<Class<? extends Annotation>> metricsAnnotations =
                 new HashSet<>(GrpcMetricsCdiExtension.METRICS_ANNOTATIONS_TO_CHECK);
 
         metricsAnnotations.removeAll(MetricsConfigurer.metricsAnnotationsSupported());
-        assertThat("Metrics annotations not supported in MetricsConfigurer", metricsAnnotations, is(empty()));
+        assertThat("One or more metrics annotations seem not supported in MetricsConfigurer but should be",
+                metricsAnnotations, is(empty()));
     }
 }

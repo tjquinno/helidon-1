@@ -228,11 +228,11 @@ public class MetricsConfigurer
             AnnotationLookupResult<? extends Annotation> lookupResult
                     = AnnotationLookupResult.lookupAnnotation(method, annotation.annotationType(), annotatedClass);
 
-            MetricAnnotationInfo mInfo = METRIC_ANNOTATION_INFO.get(annotation);
+            MetricAnnotationInfo<?> mInfo = METRIC_ANNOTATION_INFO.get(annotation.annotationType());
             if (mInfo == null || mInfo.annotationClass.isInstance(annotation)) {
                 return;
             }
-            interceptor.description(mInfo.description(annotatedMethod))
+            interceptor = interceptor.description(mInfo.description(annotatedMethod))
                     .displayName(mInfo.displayName(annotatedMethod))
                     .reusable(mInfo.reusable(annotatedMethod))
                     .units(mInfo.units(annotatedMethod));
