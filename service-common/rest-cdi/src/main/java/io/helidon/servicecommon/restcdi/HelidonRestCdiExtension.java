@@ -77,26 +77,12 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
  *     {@link HelidonRestServiceSupport} with an associated {@code Builder} class. The service support base class and its
  *     builder are both type parameters to this class.
  * </p>
- * <p>
- *     Inner classes contain information harvested by the extension plus logic that might be useful outside the extension, such as
- *     from interceptors. This implementation identifies "asynchronous" annotated methods as those with a
- *     {@code Suspended} {@code AsyncResponse}
- *     parameter. It records information about those as instances of concrete subclasses of {@link AsyncResponseInfo}. These
- *     info instances are collected inside a REST endpoint info data structure which extends {@link RestEndpointInfo}. Both of
- *     these types are parameters to this class so concrete implementations can add data that is specific to their specific
- *     technologies to the data structures. Concrete implementations of this class provide factory methods for these
- *     parameterized types.
- * </p>
  *
- * @param <A> concrete {@code AsyncResponseInfo} type
- * @param <R> concrete {@code RestEndpointInfo} type
  * @param <T> concrete type of {@code HelidonRestServiceSupport} used
  * @param <B> Builder for the concrete type of {@code }HelidonRestServiceSupport}
  */
 public abstract class HelidonRestCdiExtension<
-        A extends HelidonRestCdiExtension.AsyncResponseInfo,
-        R extends HelidonRestCdiExtension.RestEndpointInfo,
-        T extends HelidonRestServiceSupport<T, B>,
+        T extends HelidonRestServiceSupport,
         B extends HelidonRestServiceSupport.Builder<T, B>> implements Extension {
     private final Map<Bean<?>, AnnotatedMember<?>> producers = new HashMap<>();
 
@@ -110,8 +96,6 @@ public abstract class HelidonRestCdiExtension<
     private final String configPrefix;
 
     private T serviceSupport = null;
-
-    private R restEndpointInfo = null;
 
     /**
      * Common initialization for concrete implementations.
@@ -157,16 +141,14 @@ public abstract class HelidonRestCdiExtension<
         return annotatedClassesProcessed;
     }
 
-    protected void before(@Observes BeforeBeanDiscovery discovery) {
-        restEndpointInfo = newRestEndpointInfo();
-    }
+    protected void before(@Observes BeforeBeanDiscovery discovery) {}
 
-    /**
-     * Cleans up any data structures created during annotation processing but which are not needed once the CDI container has
-     * started.
-     *
-     * @param adv the {@code AfterDeploymentValidation} event
-     */
+        /**
+         * Cleans up any data structures created during annotation processing but which are not needed once the CDI container has
+         * started.
+         *
+         * @param adv the {@code AfterDeploymentValidation} event
+         */
     protected void clearAnnotationInfo(@Observes AfterDeploymentValidation adv) {
         if (logger.isLoggable(Level.FINE)) {
             Set<Class<?>> annotatedClassesIgnored = new HashSet<>(annotatedClasses());
@@ -180,58 +162,6 @@ public abstract class HelidonRestCdiExtension<
         annotatedClasses.clear();
         annotatedClassesProcessed.clear();
     }
-
-    protected R restEndpointInfo() {
-        return restEndpointInfo;
-    }
-
-    /**
-     * Finds an existing or adds a new extension-specific {@code AsyncResponseInfo} for the indicated method.
-     *
-     * @param method the Method for which the AsyncResponseInfo is needed
-     * @return the pre-existing or newly-created instance, if any; null if no existing mapping was found and the factory method
-     * declined to create one
-     */
-    protected A computeIfAbsentAsyncResponseInfo(Method method) {
-        Map<Method, A> asyncResponseInfo = restEndpointInfo.asyncResponseInfo();
-        return asyncResponseInfo.computeIfAbsent(method, this::newAsyncResponseInfo);
-    }
-
-    /**
-     * Returns a {@code AsyncResponseInfo} (or subclass) instance describing the async information about the specified method.
-     *
-     * @param method Method to examine for asynchronous behavior
-     * @return AsyncResponseInfo describing the async behavior; null if the method is synchronous
-     */
-    protected abstract A newAsyncResponseInfo(Method method);
-
-    /**
-     * Returns the index in the method's array of parameters, if any, with type {@code AsyncResponse} and annotated with {@code
-     * Suspended}.
-     *
-     * @param m the method to examine
-     * @return the array index of the async parameter, if any; -1 otherwise
-     */
-    protected static int asyncParameterSlot(Method m) {
-        int candidateAsyncResponseParameterSlot = 0;
-
-        for (Parameter p : m.getParameters()) {
-            if (AsyncResponse.class.isAssignableFrom(p.getType()) && p.isAnnotationPresent(Suspended.class)) {
-                return candidateAsyncResponseParameterSlot;
-            }
-            candidateAsyncResponseParameterSlot++;
-
-        }
-        return -1;
-    }
-
-    /**
-     * Returns a new instance of the extension-specific REST endpoint information.
-     *
-     * @return newly-initialized instance
-     */
-    protected abstract R newRestEndpointInfo();
-
 
     /**
      * Observes all managed beans but immediately dismisses ones for which the Java class was not previously noted by the {@code
@@ -278,7 +208,7 @@ public abstract class HelidonRestCdiExtension<
 
         // Process constructors
         for (AnnotatedConstructor<?> annotatedConstructor : type.getConstructors()) {
-            Constructor c = annotatedConstructor.getJavaMember();
+            Constructor<?> c = annotatedConstructor.getJavaMember();
             if (Modifier.isPrivate(c.getModifiers())) {
                 continue;
             }
@@ -416,68 +346,6 @@ public abstract class HelidonRestCdiExtension<
                     .anyMatch(Default.class::isInstance)) {
                 producers.put(bean, member);
             }
-        }
-    }
-
-    /**
-     * Captures information about REST endpoints.
-     * <p>
-     * This class records information about REST endpoints discovered during annotation processing. The primary goal is to allow
-     * runtime elements -- such as interceptors -- to retrieve efficiently information about REST endpoints that helps them do
-     * their work.
-     * </p>
-     * <p>
-     * This base class records information about {@code @Suspended} {@code AsyncResponse} arguments (if any) in JAX-RS endpoint
-     * methods. Interceptors can efficiently tell if the intercepted method is sync or async and vary their behavior accordingly.
-     * </p>
-     * <p>
-     * Subclasses can add other behavior particular to their requirements and override the {@link #newRestEndpointInfo()} factory
-     * method.
-     * </p>
-     *
-     * @param <A> concrete type of {@code AsyncResponseInfo}
-     */
-    protected static class RestEndpointInfo<A extends AsyncResponseInfo> {
-
-        private final Map<Method, A> asyncResponseInfo = new HashMap<>();
-
-        public AsyncResponse asyncResponse(InvocationContext context) {
-            A info = asyncResponseInfo.get(context.getMethod());
-            return info == null ? null : info.asyncResponse(context);
-        }
-
-        public Map<Method, A> asyncResponseInfo() {
-            return asyncResponseInfo;
-
-        }
-    }
-
-    /**
-     * Description of an {@code AsyncResponse} parameter annotated with {@code Suspended} in a JAX-RS method.
-     * <p>
-     * This base implementation stores (at annotation processing time) which parameter slot number the {@code AsyncResponse}
-     * parameter occupies and returns (at, runtime -- for example, in an interceptor) the {@code AsyncResponse} from that slot in
-     * the {@code InvocationContext}.
-     * </p>
-     */
-    protected static class AsyncResponseInfo {
-
-        // which parameter slot in the method the AsyncResponse is
-        private final int parameterSlot;
-
-
-        protected AsyncResponseInfo(int parameterSlot) {
-            this.parameterSlot = parameterSlot;
-        }
-
-        /**
-         * Returns the {@code AsyncResponse} argument object in the given invocation.
-         *
-         * @param context the {@code InvocationContext} representing the call with an {@code AsyncResponse} parameter
-         * @return the {@code AsyncResponse} instance
-         */
-        public AsyncResponse asyncResponse(InvocationContext context) {
-            return AsyncResponse.class.cast(context.getParameters()[parameterSlot]);
         }
     }
 }

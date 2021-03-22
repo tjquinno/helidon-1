@@ -104,8 +104,6 @@ import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
  * MetricsCdiExtension class.
  */
 public class MetricsCdiExtension extends HelidonRestCdiExtension<
-        MetricsCdiExtension.MpAsyncResponseInfo,
-        MetricsCdiExtension.MpRestEndpointInfo,
         MetricsSupport,
         MetricsSupport.Builder> {
     private static final Logger LOGGER = Logger.getLogger(MetricsCdiExtension.class.getName());
@@ -138,7 +136,6 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
     private final Map<Class<?>, Set<Method>> methodsWithSyntheticSimpleTimer = new HashMap<>();
     private final Set<Class<?>> syntheticSimpleTimerClassesProcessed = new HashSet<>();
     private final Set<Method> syntheticSimpleTimersToRegister = new HashSet<>();
-    private final Map<Method, AsyncResponseInfo> asyncSyntheticSimpleTimerInfo = new HashMap<>();
     private final AtomicReference<Config> config = new AtomicReference<>();
     private final AtomicReference<Config> metricsConfig = new AtomicReference<>();
 
@@ -151,7 +148,7 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
      * Creates a new extension instance.
      */
     public MetricsCdiExtension() {
-        super(LOGGER, METRIC_ANNOTATIONS, MetricProducer.class, (Config config) -> MetricsSupport.create(config), "metrics");
+        super(LOGGER, METRIC_ANNOTATIONS, MetricProducer.class, MetricsSupport::create, "metrics");
     }
 
     /**
@@ -246,12 +243,6 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
         // Config might disable the MP synthetic SimpleTimer feature for JAX-RS endpoints.
         // For efficiency, prepare to consult config only once rather than from each interceptor instance.
         discovery.addAnnotatedType(MpRestEndpointInfo.class, MpRestEndpointInfo.class.getSimpleName());
-
-        asyncSyntheticSimpleTimerInfo.clear();
-    }
-
-    Map<Method, AsyncResponseInfo> asyncResponseInfo() {
-        return asyncSyntheticSimpleTimerInfo;
     }
 
     @Override
@@ -337,17 +328,6 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
         }
     }
 
-    @Override
-    protected MpAsyncResponseInfo newAsyncResponseInfo(Method method) {
-        int slot = asyncParameterSlot(method);
-        return (slot >= 0) ? new MpAsyncResponseInfo(slot) : null;
-    }
-
-    @Override
-    protected MpRestEndpointInfo newRestEndpointInfo() {
-        return new MpRestEndpointInfo(chooseRestEndpointsSetting(metricsConfig()));
-    }
-
     /**
      * Creates or looks up the synthetic {@code SimpleTimer} instance for a JAX-RS method.
      *
@@ -361,12 +341,6 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension<
                         method.getName()));
         return getRegistryForSyntheticSimpleTimers()
                 .simpleTimer(SYNTHETIC_SIMPLE_TIMER_METADATA, syntheticSimpleTimerMetricTags(method));
-    }
-
-    private SimpleTimer registerAndSaveAsyncSyntheticSimpleTimer(Method method) {
-        SimpleTimer result = syntheticSimpleTimer(method);
-        computeIfAbsentAsyncResponseInfo(method);
-        return result;
     }
 
     /**

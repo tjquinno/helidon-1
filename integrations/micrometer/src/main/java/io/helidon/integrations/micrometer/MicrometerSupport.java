@@ -43,7 +43,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * MeterRegistry} to create or locate meters.
  * </p>
  */
-public class MicrometerSupport extends HelidonRestServiceSupport<MicrometerSupport, MicrometerSupport.Builder> {
+public class MicrometerSupport extends HelidonRestServiceSupport {
 
     static final String DEFAULT_CONTEXT = "/micrometer";
     private static final String SERVICE_NAME = "Micrometer";
