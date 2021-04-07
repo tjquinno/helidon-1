@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2018, 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import io.helidon.webserver.Service;
 import io.helidon.webserver.cors.CorsEnabledServiceHelper;
 import io.helidon.webserver.cors.CrossOriginConfig;
 
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.Meter;
@@ -358,10 +359,23 @@ public final class MetricsSupport implements Service {
                 .withUnit(MetricUnits.NONE)
                 .build());
 
+        ConcurrentGauge inflightRequests = vendor.concurrentGauge(Metadata.builder()
+                .withName(metricPrefix + "inflight")
+                .withDisplayName("Current in-flight HTTP requests")
+                .withDescription("Each incoming request increases the count, and each completed request decreases it")
+                .withType(MetricType.CONCURRENT_GAUGE)
+                .withUnit(MetricUnits.NONE)
+                .build());
+
         rules.any((req, res) -> {
             totalCount.inc();
             totalMeter.mark();
-            req.next();
+            inflightRequests.inc();
+            try {
+                req.next();
+            } finally {
+                inflightRequests.dec();
+            }
         });
     }
 
